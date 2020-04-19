@@ -14,7 +14,7 @@ type ShellService struct {
 
 // Fetch extracts the contents of file
 func (svc *ShellService) Fetch(path, filename string) (string, error) {
-	cmdLine := fmt.Sprintf(`cat "%s"`, path)
+	cmdLine := fmt.Sprintf(`cat %s`, path)
 	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
 		return "", err
@@ -24,7 +24,7 @@ func (svc *ShellService) Fetch(path, filename string) (string, error) {
 
 //List return file names in the directory
 func (svc *ShellService) List(path string) ([]string, error) {
-	cmdLine := fmt.Sprintf(`find "%s" -type f`, path)
+	cmdLine := fmt.Sprintf(`find %s -type f`, path)
 	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (svc *ShellService) List(path string) ([]string, error) {
 
 // Delete remove a single file in the provided absolute path
 func (svc *ShellService) Delete(path string) error {
-	cmdLine := fmt.Sprintf(`rm "%s"`, path)
+	cmdLine := fmt.Sprintf(`rm %s`, path)
 	err := svc.tnl.Run(cmdLine)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (svc *ShellService) Delete(path string) error {
 
 // Clean removes all the files older than provided days in given directory
 func (svc *ShellService) Clean(path string, daysold int) error {
-	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -delete`, path, daysold)
+	cmdLine := fmt.Sprintf(`find %s -type f -mtime +%d -delete`, path, daysold)
 	err := svc.tnl.Run(cmdLine)
 	if err != nil {
 		return err

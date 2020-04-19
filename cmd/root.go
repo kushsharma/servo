@@ -14,8 +14,8 @@ func InitCommands() {
 		Version: viper.GetString("version"),
 	}
 
-	rootCmd.AddCommand(initLog())
 	rootCmd.AddCommand(initBackup())
+	rootCmd.AddCommand(initDelete())
 	rootCmd.AddCommand(initVersion())
 	rootCmd.Execute()
 }

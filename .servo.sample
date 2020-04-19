@@ -1,0 +1,27 @@
+machines:
+  - name: coolmachine
+    conn: remote # or "local"
+    auth:
+      address: "0.0.0.0:22" 
+      user: username
+      keyfile: /tmp/private.pem
+      keypassword: somepassword
+    clean:
+      olderthan: 10 # days
+      path:
+        - /var/app/logs
+        - /tmp/log
+    backup:
+      schedule: "@daily"
+      bucket: s3bucket
+      prefix: temp/
+      fspath:
+        - /tmp/log
+      db:
+        user: root
+        password: somepassword
+s3: # digital ocean space
+  key: AAAA
+  secret: AAAAAAAAAAAAAAAAAA
+  endpoint: sgp1.digitaloceanspaces.com
+

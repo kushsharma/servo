@@ -7,7 +7,7 @@ type ApplicationConfig struct {
 }
 
 type MachineConfig struct {
-	Name           string
+	Name           string        `yaml:"name"`
 	ConnectionType string        `yaml:"conn"`
 	Auth           SSHAuthConfig `yaml:"auth"`
 	Clean          CleanConfig   `yaml:"clean"`
@@ -25,18 +25,19 @@ type SSHAuthConfig struct {
 type S3Config struct {
 	Key      string `yaml:"key"`
 	Secret   string `yaml:"secret"`
-	Bucket   string `yaml:"bucket"`
 	Endpoint string `yaml:"endpoint"`
 }
 
 type CleanConfig struct {
-	OlderThan int `yaml:"olderthan"`
-	Path      []string
+	OlderThan int      `yaml:"olderthan"`
+	Path      []string `yaml:"path"`
 }
 
 type BackupConfig struct {
-	Schedule string
-	Fspath   []string
+	Schedule string   `yaml:"schedule"`
+	Bucket   string   `yaml:"bucket"`
+	Prefix   string   `yaml:"prefix"`
+	Fspath   []string `yaml:"fspath"`
 	DB       DBConfig `yaml:"db"`
 }
 

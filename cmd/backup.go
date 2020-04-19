@@ -48,6 +48,13 @@ func initBackup() *cobra.Command {
 				if err := backupFS(fsService); err != nil {
 					return err
 				}
+				fmt.Printf("fs backup completed successfully for %s\n", machine.Name)
+
+				dbService := backup.NewDBService(tnl, s3Client, machine.Backup)
+				if err := backupDB(dbService); err != nil {
+					return err
+				}
+				fmt.Printf("db backup completed successfully for %s\n", machine.Name)
 			}
 
 			return nil
@@ -68,5 +75,21 @@ func backupFS(svc backup.BackupService) error {
 		return err
 	}
 
-	return err
+	return nil
+}
+
+//backupDB
+func backupDB(svc backup.BackupService) error {
+
+	err := svc.Prepare()
+	if err != nil {
+		return err
+	}
+
+	err = svc.Migrate()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

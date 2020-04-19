@@ -5,6 +5,7 @@ import (
 
 	"github.com/kushsharma/servo/internal"
 	sshtunnel "github.com/kushsharma/servo/tunnel/ssh"
+	"github.com/pkg/errors"
 )
 
 type SSHTunnel struct {
@@ -28,10 +29,15 @@ func (tnl *SSHTunnel) Close() error {
 
 func NewSSHTunnel(authConfig internal.SSHAuthConfig) (*SSHTunnel, error) {
 	tnl := new(SSHTunnel)
+
+	if authConfig.Address == "" || authConfig.User == "" {
+		return nil, errors.New("invalid machine auth config")
+	}
 	sshclient, err := sshtunnel.ConnectWithKeyPassphrase(authConfig)
 	if err != nil {
 		return nil, err
 	}
 	tnl.client = sshclient
+
 	return tnl, nil
 }
