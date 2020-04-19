@@ -5,16 +5,9 @@ import (
 	"io/ioutil"
 	"net"
 
+	"github.com/kushsharma/servo/internal"
 	"golang.org/x/crypto/ssh"
 )
-
-type SSHAuthConfig struct {
-	Address      string `yaml:"address"`
-	User         string `yaml:"user"`
-	AuthPassword string `yaml:"authpassword"`
-	KeyFile      string `yaml:"keyfile"`
-	KeyPassword  string `yaml:"keypassword"`
-}
 
 type remoteScriptType byte
 type remoteShellType byte
@@ -81,7 +74,7 @@ Now you have a PEM format for your public key. Nice! This can’t be used with S
 # To generate the ssh-rsa public key format, run the following:
 $ ssh-keygen -f public.pem -i -mPKCS8 > id_rsa.pub
 */
-func ConnectWithKeyPassphrase(auth SSHAuthConfig) (*Client, error) {
+func ConnectWithKeyPassphrase(auth internal.SSHAuthConfig) (*Client, error) {
 	key, err := ioutil.ReadFile(auth.KeyFile)
 	if err != nil {
 		return nil, err

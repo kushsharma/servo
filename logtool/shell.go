@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kushsharma/servo/sshtunnel"
+	"github.com/kushsharma/servo/tunnel"
 )
 
-// Service that implements logtool.Service interface
+// ShellService that implements logtool.Service interface
 type ShellService struct {
-	ssh *sshtunnel.Client
+	tnl tunnel.Executioner
 }
 
 // Fetch extracts the contents of file
 func (svc *ShellService) Fetch(path, filename string) (string, error) {
 	cmdLine := fmt.Sprintf(`cat "%s"`, path)
-	shellCmd := svc.ssh.Cmd(cmdLine)
-	output, err := shellCmd.RunWithOutput()
+	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
 		return "", err
 	}
@@ -26,8 +25,7 @@ func (svc *ShellService) Fetch(path, filename string) (string, error) {
 //List return file names in the directory
 func (svc *ShellService) List(path string) ([]string, error) {
 	cmdLine := fmt.Sprintf(`find "%s" -type f`, path)
-	shellCmd := svc.ssh.Cmd(cmdLine)
-	output, err := shellCmd.RunWithOutput()
+	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +37,7 @@ func (svc *ShellService) List(path string) ([]string, error) {
 // Delete remove a single file in the provided absolute path
 func (svc *ShellService) Delete(path string) error {
 	cmdLine := fmt.Sprintf(`rm "%s"`, path)
-	shellCmd := svc.ssh.Cmd(cmdLine)
-	_, err := shellCmd.RunWithOutput()
+	err := svc.tnl.Run(cmdLine)
 	if err != nil {
 		return err
 	}
@@ -51,8 +48,7 @@ func (svc *ShellService) Delete(path string) error {
 // Clean removes all the files older than provided days in given directory
 func (svc *ShellService) Clean(path string, daysold int) error {
 	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -delete;`, path, daysold)
-	shellCmd := svc.ssh.Cmd(cmdLine)
-	_, err := shellCmd.RunWithOutput()
+	err := svc.tnl.Run(cmdLine)
 	if err != nil {
 		return err
 	}
@@ -63,8 +59,7 @@ func (svc *ShellService) Clean(path string, daysold int) error {
 // DryClean only list files that can be removed instead of actually removing them
 func (svc *ShellService) DryClean(path string, daysold int) ([]string, error) {
 	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -print;`, path, daysold)
-	shellCmd := svc.ssh.Cmd(cmdLine)
-	output, err := shellCmd.RunWithOutput()
+	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +68,8 @@ func (svc *ShellService) DryClean(path string, daysold int) ([]string, error) {
 }
 
 // NewService returns a instance of ShellService that implements LogMangager over shell
-func NewService(client *sshtunnel.Client) *ShellService {
+func NewService(tnl tunnel.Executioner) *ShellService {
 	return &ShellService{
-		ssh: client,
+		tnl: tnl,
 	}
 }

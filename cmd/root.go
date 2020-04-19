@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/kushsharma/servo/internal"
+	"github.com/kushsharma/servo/tunnel"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -16,4 +18,9 @@ func InitCommands() {
 	rootCmd.AddCommand(initBackup())
 	rootCmd.AddCommand(initVersion())
 	rootCmd.Execute()
+}
+
+func createTunnel(machine internal.MachineConfig) tunnel.Executioner {
+
+	return nil
 }

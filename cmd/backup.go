@@ -31,12 +31,12 @@ func initBackup() *cobra.Command {
 
 			s3Config := &aws.Config{
 				Credentials: credentials.NewStaticCredentials(appConfig.S3.Key, appConfig.S3.Secret, ""),
-				Endpoint:    aws.String("https://moonware.nyc3.digitaloceanspaces.com"),
+				Endpoint:    aws.String(appConfig.S3.Endpoint),
 				Region:      aws.String("us-east-1"),
 			}
 			// Create S3 service client
-			newSession := session.New(s3Config)
-			s3Client := s3.New(newSession)
+			awsSession := session.New(s3Config)
+			s3Client := s3.New(awsSession)
 
 			for _, machine := range appConfig.Machines {
 				sshclient, err := sshtunnel.ConnectWithKeyPassphrase(machine.Auth)

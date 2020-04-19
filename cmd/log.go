@@ -45,6 +45,9 @@ func initLog() *cobra.Command {
 	}
 }
 
+
+
+
 //logClean remove files that are unnecessary and older than x days
 func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
 

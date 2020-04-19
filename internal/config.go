@@ -1,7 +1,5 @@
 package internal
 
-import "github.com/kushsharma/servo/sshtunnel"
-
 // ApplicationConfig is populated from yaml config file
 type ApplicationConfig struct {
 	Machines []MachineConfig `yaml:"machines"`
@@ -9,17 +7,26 @@ type ApplicationConfig struct {
 }
 
 type MachineConfig struct {
-	Name   string
-	Auth   sshtunnel.SSHAuthConfig `yaml:"auth"`
-	Clean  CleanConfig             `yaml:"clean"`
-	Backup BackupConfig            `yaml:"backup"`
+	Name           string
+	ConnectionType string        `yaml:"conn"`
+	Auth           SSHAuthConfig `yaml:"auth"`
+	Clean          CleanConfig   `yaml:"clean"`
+	Backup         BackupConfig  `yaml:"backup"`
+}
+
+type SSHAuthConfig struct {
+	Address      string `yaml:"address"`
+	User         string `yaml:"user"`
+	AuthPassword string `yaml:"authpassword"`
+	KeyFile      string `yaml:"keyfile"`
+	KeyPassword  string `yaml:"keypassword"`
 }
 
 type S3Config struct {
-	Key    string `yaml:"key"`
-	Secret string `yaml:"secret"`
-	Bucket string `yaml:"bucket"`
-	Host   string `yaml:"host"`
+	Key      string `yaml:"key"`
+	Secret   string `yaml:"secret"`
+	Bucket   string `yaml:"bucket"`
+	Endpoint string `yaml:"endpoint"`
 }
 
 type CleanConfig struct {
