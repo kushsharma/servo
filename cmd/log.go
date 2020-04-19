@@ -6,7 +6,6 @@ import (
 
 	"github.com/kushsharma/servo/internal"
 	"github.com/kushsharma/servo/logtool"
-	"github.com/kushsharma/servo/sshtunnel"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,13 +27,11 @@ func initLog() *cobra.Command {
 			}
 
 			for _, machine := range appConfig.Machines {
-				sshclient, err := sshtunnel.ConnectWithKeyPassphrase(machine.Auth)
+				tnl, err := createTunnel(machine)
 				if err != nil {
 					return err
 				}
-				defer sshclient.Close()
-
-				logToolService := logtool.NewService(sshclient)
+				logToolService := logtool.NewService(tnl)
 				if err := logClean(logToolService, machine.Clean); err != nil {
 					return err
 				}
@@ -44,9 +41,6 @@ func initLog() *cobra.Command {
 		},
 	}
 }
-
-
-
 
 //logClean remove files that are unnecessary and older than x days
 func logClean(svc logtool.LogManager, config internal.CleanConfig) error {

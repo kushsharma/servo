@@ -20,7 +20,10 @@ func InitCommands() {
 	rootCmd.Execute()
 }
 
-func createTunnel(machine internal.MachineConfig) tunnel.Executioner {
+func createTunnel(machine internal.MachineConfig) (tunnel.Executioner, error) {
+	if machine.ConnectionType == "remote" {
+		return tunnel.NewSSHTunnel(machine.Auth)
+	}
 
-	return nil
+	return tunnel.NewLocalTunnel(), nil
 }
