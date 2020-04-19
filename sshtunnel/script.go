@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type RemoteScript struct {
+type RemoteCommand struct {
 	client *ssh.Client
 	_type  remoteScriptType
 	script *bytes.Buffer
@@ -20,7 +20,7 @@ type RemoteScript struct {
 }
 
 // Run
-func (rs *RemoteScript) Run() error {
+func (rs *RemoteCommand) Run() error {
 	if rs.err != nil {
 		fmt.Println(rs.err)
 		return rs.err
@@ -35,17 +35,7 @@ func (rs *RemoteScript) Run() error {
 	}
 }
 
-func (rs *RemoteScript) Output() ([]byte, error) {
-	if rs.stdout != nil {
-		return nil, errors.New("stdout already set")
-	}
-	var out bytes.Buffer
-	rs.stdout = &out
-	err := rs.Run()
-	return out.Bytes(), err
-}
-
-func (rs *RemoteScript) SmartOutput() ([]byte, error) {
+func (rs *RemoteCommand) RunWithOutput() ([]byte, error) {
 	if rs.stdout != nil {
 		return nil, errors.New("stdout already set")
 	}
@@ -66,7 +56,7 @@ func (rs *RemoteScript) SmartOutput() ([]byte, error) {
 	return stdout.Bytes(), err
 }
 
-func (rs *RemoteScript) Cmd(cmd string) *RemoteScript {
+func (rs *RemoteCommand) SetCmd(cmd string) *RemoteCommand {
 	_, err := rs.script.WriteString(cmd + "\n")
 	if err != nil {
 		rs.err = err
@@ -74,13 +64,13 @@ func (rs *RemoteScript) Cmd(cmd string) *RemoteScript {
 	return rs
 }
 
-func (rs *RemoteScript) SetStdio(stdout, stderr io.Writer) *RemoteScript {
+func (rs *RemoteCommand) SetStdio(stdout, stderr io.Writer) *RemoteCommand {
 	rs.stdout = stdout
 	rs.stderr = stderr
 	return rs
 }
 
-func (rs *RemoteScript) runCmd(cmd string) error {
+func (rs *RemoteCommand) runCmd(cmd string) error {
 	session, err := rs.client.NewSession()
 	if err != nil {
 		return err
@@ -96,7 +86,7 @@ func (rs *RemoteScript) runCmd(cmd string) error {
 	return nil
 }
 
-func (rs *RemoteScript) runCmds() error {
+func (rs *RemoteCommand) runCmds() error {
 	for {
 		statment, err := rs.script.ReadString('\n')
 		if err == io.EOF {
@@ -114,7 +104,7 @@ func (rs *RemoteScript) runCmds() error {
 	return nil
 }
 
-func (rs *RemoteScript) runScript() error {
+func (rs *RemoteCommand) runScript() error {
 	session, err := rs.client.NewSession()
 	if err != nil {
 		return err

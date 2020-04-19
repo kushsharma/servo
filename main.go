@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/kushsharma/servo/cmd"
-	"github.com/kushsharma/servo/logtool"
+	"github.com/kushsharma/servo/internal"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -18,15 +20,17 @@ var (
 	// AppName of this executable
 	AppName = "servo"
 
+	// TODO: provide option to read this from cli flag
 	cfgFile = ""
+
+	// AppConfig stores all the application specific configuration
+	// required for various auth and actions
+	AppConfig internal.ApplicationConfig
 )
 
 func main() {
 	initConfig()
-
-	logToolService := logtool.NewService()
-
-	cmd.InitCommands(logToolService)
+	cmd.InitCommands()
 }
 
 func initConfig() {
@@ -40,11 +44,12 @@ func initConfig() {
 			panic(err)
 		}
 
-		// search config in home directory
-		viper.AddConfigPath(home)
+		viper.SetConfigName("." + AppName) //.servo
+
 		// search in current dir
 		viper.AddConfigPath(".")
-		viper.SetConfigName("." + AppName) //.servo
+		// search config in home directory
+		viper.AddConfigPath(home)
 	}
 
 	viper.SetConfigType("yaml")
@@ -56,7 +61,18 @@ func initConfig() {
 	viper.Set("version", Version)
 
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		configFilePath := viper.ConfigFileUsed()
+		fmt.Println("Using config file:", configFilePath)
+
+		// ready yaml seperately because viper parsing sucks
+		configByte, err := ioutil.ReadFile(configFilePath)
+		if err != nil {
+			panic(err)
+		}
+		if err := yaml.Unmarshal(configByte, &AppConfig); err != nil {
+			panic(err)
+		}
+		viper.Set("app", AppConfig)
 	} else {
 		panic(err)
 	}

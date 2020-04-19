@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/kushsharma/servo/internal"
 	"github.com/kushsharma/servo/logtool"
 	"github.com/kushsharma/servo/sshtunnel"
 
@@ -12,75 +13,54 @@ import (
 )
 
 var (
-	ErrInvalidSSHMachineConfig = errors.New("invalid ssh machine configs provided")
+	ErrInvalidSSHMachineConfig = errors.New("invalid machine configs provided")
 )
 
-func initLog(ltService logtool.LogManager) *cobra.Command {
+func initLog() *cobra.Command {
 	return &cobra.Command{
 		Use: "log",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("logtool initialized for " + viper.GetString("config.schedule"))
+			fmt.Println("starting logtool...")
 
-			//fetch logs
-			// logs, err := ltService.List("/Users/rick/Dev/web/hire/site/laravel/storage/logs")
-			// if err != nil {
-			// 	return err
-			// }
-
-			machinesRaw, ok := viper.GetStringMap("ssh")["machines"]
-			if !ok {
-				return errors.New("no ssh configs provided")
-			}
-			machines, ok := machinesRaw.([]interface{})
+			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
 			if !ok {
 				return ErrInvalidSSHMachineConfig
 			}
 
-			sshConfig := &sshtunnel.SSHAuthConfig{}
+			for _, machine := range appConfig.Machines {
+				sshclient, err := sshtunnel.ConnectWithKeyPassphrase(machine.Auth)
+				if err != nil {
+					return err
+				}
+				defer sshclient.Close()
 
-			for _, machineRaw := range machines {
-				machine, ok := machineRaw.(map[interface{}]interface{})
-				if !ok {
-					return ErrInvalidSSHMachineConfig
+				logToolService := logtool.NewService(sshclient)
+				if err := logClean(logToolService, machine.Clean); err != nil {
+					return err
 				}
-
-				user, ok := machine["user"]
-				if ok {
-					sshConfig.User = user.(string)
-				}
-				addr, ok := machine["address"]
-				if ok {
-					sshConfig.Address = addr.(string)
-				}
-				key, ok := machine["key"]
-				if ok {
-					sshConfig.KeyFile = key.(string)
-				}
-				pass, ok := machine["password"]
-				if ok {
-					sshConfig.KeyPassword = pass.(string)
-				}
-
-				//DEBUG
-				break
 			}
 
-			fmt.Println(sshConfig)
-			sshclient, err := sshtunnel.ConnectWithKeyPassphrase(sshConfig)
-			if err != nil {
-				return err
-			}
-			rscript := sshclient.Cmd("whoami")
-			if str, err := rscript.Output(); err == nil {
-				fmt.Println("output from ssh: " + string(str))
-				//}
-				//if err := rscript.Run(); err == nil {
-			} else {
-				return err
-			}
-
-			sshclient.Close()
 			return nil
 		},
 	}
+}
+
+//logClean remove files that are unnecessary and older than x days
+func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
+
+	//files to be cleaned older than x days
+	daysOld := config.OlderThan
+
+	errs := []error{}
+	for _, path := range config.Path {
+		files, err := svc.DryClean(path, daysOld)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		fmt.Print(files)
+	}
+
+	return internal.ErrMerge(errs)
 }

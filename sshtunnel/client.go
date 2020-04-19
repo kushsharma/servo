@@ -9,13 +9,11 @@ import (
 )
 
 type SSHAuthConfig struct {
-	Address string
-
-	User         string
-	AuthPassword string
-
-	KeyFile     string
-	KeyPassword string
+	Address      string `yaml:"address"`
+	User         string `yaml:"user"`
+	AuthPassword string `yaml:"authpassword"`
+	KeyFile      string `yaml:"keyfile"`
+	KeyPassword  string `yaml:"keypassword"`
 }
 
 type remoteScriptType byte
@@ -83,7 +81,7 @@ Now you have a PEM format for your public key. Nice! This can’t be used with S
 # To generate the ssh-rsa public key format, run the following:
 $ ssh-keygen -f public.pem -i -mPKCS8 > id_rsa.pub
 */
-func ConnectWithKeyPassphrase(auth *SSHAuthConfig) (*Client, error) {
+func ConnectWithKeyPassphrase(auth SSHAuthConfig) (*Client, error) {
 	key, err := ioutil.ReadFile(auth.KeyFile)
 	if err != nil {
 		return nil, err
@@ -122,8 +120,8 @@ func (c *Client) Close() error {
 }
 
 // Cmd create a command on client
-func (c *Client) Cmd(cmd string) *RemoteScript {
-	return &RemoteScript{
+func (c *Client) Cmd(cmd string) *RemoteCommand {
+	return &RemoteCommand{
 		_type:  cmdLine,
 		client: c.client,
 		script: bytes.NewBufferString(cmd + "\n"),
@@ -131,8 +129,8 @@ func (c *Client) Cmd(cmd string) *RemoteScript {
 }
 
 // Script
-func (c *Client) Script(script string) *RemoteScript {
-	return &RemoteScript{
+func (c *Client) Script(script string) *RemoteCommand {
+	return &RemoteCommand{
 		_type:  rawScript,
 		client: c.client,
 		script: bytes.NewBufferString(script + "\n"),
@@ -140,7 +138,7 @@ func (c *Client) Script(script string) *RemoteScript {
 }
 
 // ScriptFile
-func (c *Client) ScriptFile(fname string) (*RemoteScript, error) {
+func (c *Client) ScriptFile(fname string) (*RemoteCommand, error) {
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
