@@ -31,6 +31,8 @@ func initLog() *cobra.Command {
 				if err != nil {
 					return err
 				}
+				defer tnl.Close()
+
 				logToolService := logtool.NewService(tnl)
 				if err := logClean(logToolService, machine.Clean); err != nil {
 					return err
