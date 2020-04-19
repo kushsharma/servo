@@ -13,6 +13,7 @@ func InitCommands() {
 	}
 
 	rootCmd.AddCommand(initLog())
+	rootCmd.AddCommand(initBackup())
 	rootCmd.AddCommand(initVersion())
 	rootCmd.Execute()
 }

@@ -8,6 +8,10 @@ import (
 	"github.com/kushsharma/servo/internal"
 	"github.com/kushsharma/servo/sshtunnel"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,6 +29,15 @@ func initBackup() *cobra.Command {
 				return errors.New("unable to find application config")
 			}
 
+			s3Config := &aws.Config{
+				Credentials: credentials.NewStaticCredentials(appConfig.S3.Key, appConfig.S3.Secret, ""),
+				Endpoint:    aws.String("https://moonware.nyc3.digitaloceanspaces.com"),
+				Region:      aws.String("us-east-1"),
+			}
+			// Create S3 service client
+			newSession := session.New(s3Config)
+			s3Client := s3.New(newSession)
+
 			for _, machine := range appConfig.Machines {
 				sshclient, err := sshtunnel.ConnectWithKeyPassphrase(machine.Auth)
 				if err != nil {
@@ -32,7 +45,7 @@ func initBackup() *cobra.Command {
 				}
 				defer sshclient.Close()
 
-				fsService := backup.NewFSService(sshclient, machine.Backup)
+				fsService := backup.NewFSService(sshclient, s3Client, machine.Backup)
 				if err := backupFS(fsService); err != nil {
 					return err
 				}
