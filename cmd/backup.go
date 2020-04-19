@@ -6,7 +6,6 @@ import (
 
 	"github.com/kushsharma/servo/backup"
 	"github.com/kushsharma/servo/internal"
-	"github.com/kushsharma/servo/sshtunnel"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -39,13 +38,13 @@ func initBackup() *cobra.Command {
 			s3Client := s3.New(awsSession)
 
 			for _, machine := range appConfig.Machines {
-				sshclient, err := sshtunnel.ConnectWithKeyPassphrase(machine.Auth)
+				tnl, err := createTunnel(machine)
 				if err != nil {
 					return err
 				}
-				defer sshclient.Close()
+				defer tnl.Close()
 
-				fsService := backup.NewFSService(sshclient, s3Client, machine.Backup)
+				fsService := backup.NewFSService(tnl, s3Client, machine.Backup)
 				if err := backupFS(fsService); err != nil {
 					return err
 				}

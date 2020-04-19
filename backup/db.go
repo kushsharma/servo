@@ -1,9 +1,11 @@
 package backup
 
-import "github.com/kushsharma/servo/sshtunnel"
+import (
+	"github.com/kushsharma/servo/tunnel"
+)
 
 type DBService struct {
-	ssh *sshtunnel.Client
+	tnl tunnel.Executioner
 }
 
 func (svc *DBService) Prepare() error {
@@ -16,8 +18,8 @@ func (svc *DBService) Migrate() error {
 	return nil
 }
 
-func NewDBService(client *sshtunnel.Client) *DBService {
+func NewDBService(tnl tunnel.Executioner) *DBService {
 	db := new(DBService)
-	db.ssh = client
+	db.tnl = tnl
 	return db
 }

@@ -53,12 +53,11 @@ func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
 	errs := []error{}
 	for _, path := range config.Path {
 		files, err := svc.DryClean(path, daysOld)
+		fmt.Print(files)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
-
-		fmt.Print(files)
 	}
 
 	return internal.ErrMerge(errs)

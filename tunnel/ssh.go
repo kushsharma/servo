@@ -1,8 +1,10 @@
 package tunnel
 
 import (
+	"strings"
+
 	"github.com/kushsharma/servo/internal"
-	"github.com/kushsharma/servo/sshtunnel"
+	sshtunnel "github.com/kushsharma/servo/tunnel/ssh"
 )
 
 type SSHTunnel struct {
@@ -10,12 +12,14 @@ type SSHTunnel struct {
 }
 
 func (tnl *SSHTunnel) Run(cmd string) error {
-
-	return nil
+	execCmd := tnl.client.Cmd(cmd)
+	return execCmd.Run()
 }
 
 func (tnl *SSHTunnel) RunWithOutput(cmd string) (string, error) {
-	return "", nil
+	execCmd := tnl.client.Cmd(cmd)
+	output, err := execCmd.RunWithOutput()
+	return strings.TrimSpace(string(output)), err
 }
 
 func (tnl *SSHTunnel) Close() error {

@@ -47,7 +47,7 @@ func (svc *ShellService) Delete(path string) error {
 
 // Clean removes all the files older than provided days in given directory
 func (svc *ShellService) Clean(path string, daysold int) error {
-	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -delete;`, path, daysold)
+	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -delete`, path, daysold)
 	err := svc.tnl.Run(cmdLine)
 	if err != nil {
 		return err
@@ -58,10 +58,10 @@ func (svc *ShellService) Clean(path string, daysold int) error {
 
 // DryClean only list files that can be removed instead of actually removing them
 func (svc *ShellService) DryClean(path string, daysold int) ([]string, error) {
-	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -print;`, path, daysold)
+	cmdLine := fmt.Sprintf(`find %s -type f -mtime +%d -print`, path, daysold)
 	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
-		return nil, err
+		return []string{output}, err
 	}
 
 	return strings.Split(string(output), "\n"), nil
