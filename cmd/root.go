@@ -17,6 +17,7 @@ func InitCommands() {
 	rootCmd.AddCommand(initBackup())
 	rootCmd.AddCommand(initDelete())
 	rootCmd.AddCommand(initVersion())
+	rootCmd.AddCommand(initTest())
 	rootCmd.Execute()
 }
 
