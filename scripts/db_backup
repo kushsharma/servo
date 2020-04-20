@@ -1,3 +1,0 @@
-#/bin/sh
-# script for db backup
-mysqldump -u{{user}} -p{{password}} --all-databases --single-transaction --quick --lock-tables=false --triggers --routines | gzip > db_backup_$(date +%F).sql.gz 

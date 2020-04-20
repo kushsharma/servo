@@ -42,8 +42,11 @@ func (svc *FSService) Prepare() error {
 
 // Migrate push fs items to s3 bucket
 func (svc *FSService) Migrate() error {
-	uploader := s3manager.NewUploaderWithClient(svc.s3)
+	if len(svc.files) == 0 {
+		return nil
+	}
 
+	uploader := s3manager.NewUploaderWithClient(svc.s3)
 	for _, filepath := range svc.files {
 		f, err := os.Open(filepath)
 		if err != nil {

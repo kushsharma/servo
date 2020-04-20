@@ -34,10 +34,8 @@ func (tnl *LocalTunnel) RunWithOutput(command string) (string, error) {
 	defer cancel()
 
 	parts := strings.Split(command, " ")
-	if len(parts) == 1 {
-		//make sure parts has min len of 2
-		parts = append(parts, "")
-	}
+	parts = append(parts, "\n")
+
 	execCmd := exec.CommandContext(ctx, parts[0], parts[1:]...)
 	execCmd.Stdout = &tnl.stdout
 	execCmd.Stderr = &tnl.stderr
