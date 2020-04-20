@@ -3,6 +3,7 @@ package backup
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -22,6 +23,11 @@ const (
 mysqldump -u{{.User}} {{.Password}} --all-databases --single-transaction --quick --lock-tables=false --triggers | gzip > {{.Name}}
 `
 	tempShellFileName = "/tmp/servo_db_dump.sh"
+	backupS3Directory = "db"
+)
+
+var (
+	errRemovingTemporaryFiles = errors.New("error in removing temporary files")
 )
 
 type DBService struct {
@@ -63,7 +69,10 @@ func (svc *DBService) Prepare() error {
 	}
 	defer func() {
 		//delete temp file
-		os.Remove(tempShellFileName)
+		err := os.Remove(tempShellFileName)
+		if err != nil {
+			fmt.Printf("%v: %v\n", errRemovingTemporaryFiles, err)
+		}
 	}()
 
 	if out, err := svc.tnl.RunWithOutput(fmt.Sprintf("sh -c %s", tempShellFileName)); err != nil {
@@ -94,13 +103,22 @@ func (svc *DBService) Migrate() error {
 		fmt.Println(err.Error())
 	}
 
+	defer func() {
+		//clean db file once upload is complete
+		err = os.Remove(svc.file)
+		if err != nil {
+			fmt.Printf("%v: %v\n", errRemovingTemporaryFiles, err)
+		}
+	}()
+
 	return nil
 }
 
 func (svc *DBService) s3object(f *os.File, path string) *s3manager.UploadInput {
+	filename := filepath.Base(path)
 	return &s3manager.UploadInput{
 		Bucket: aws.String(svc.config.Bucket),
-		Key:    aws.String(filepath.Join(svc.config.Prefix, path)),
+		Key:    aws.String(filepath.Join(svc.config.Prefix, backupS3Directory, filename)),
 		ACL:    aws.String("private"),
 		Body:   f,
 	}
