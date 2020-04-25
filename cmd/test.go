@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"time"
 
-	rcmd "github.com/rclone/rclone/cmd"
-	rops "github.com/rclone/rclone/fs/operations"
+	robscure "github.com/rclone/rclone/fs/config/obscure"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -18,13 +17,13 @@ var ()
 func initTest() *cobra.Command {
 	return &cobra.Command{
 		Use: "test",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			fmt.Println("starting test tool...")
+			_, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
 
-			fsrc := rcmd.NewFsSrc([]string{"localfs:./"})
-			var stdout bytes.Buffer
-			err := rops.ListLong(context.Background(), fsrc, &stdout)
-			log.Info(stdout.String())
+			str, err := robscure.Reveal("gWAnMklpEUt407FzwqgOX9tzeR2b")
+			log.Info(str)
 
 			return err
 		},

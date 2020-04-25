@@ -47,8 +47,8 @@ func subDeleteS3() *cobra.Command {
 			}
 
 			s3Config := &aws.Config{
-				Credentials: credentials.NewStaticCredentials(appConfig.S3.Key, appConfig.S3.Secret, ""),
-				Endpoint:    aws.String(appConfig.S3.Endpoint),
+				Credentials: credentials.NewStaticCredentials(appConfig.Remotes.S3.Key, appConfig.Remotes.S3.Secret, ""),
+				Endpoint:    aws.String(appConfig.Remotes.S3.Endpoint),
 				Region:      aws.String("us-east-1"),
 			}
 			// Create S3 service client
@@ -155,19 +155,22 @@ func subDeleteLog() *cobra.Command {
 			}
 
 			for _, machine := range appConfig.Machines {
-				tnl, err := createTunnel(machine)
-				if err != nil {
-					return err
-				}
-				defer tnl.Close()
+				// tnl, err := createTunnel(machine)
+				// if err != nil {
+				// 	return err
+				// }
+				// defer tnl.Close()
 
-				logToolService := logtool.NewService(tnl)
+				// logToolService := logtool.NewShellService(tnl)
+				// if err := logClean(logToolService, machine.Clean); err != nil {
+				// 	return err
+				// }
+
+				logToolService := logtool.NewRcloneService()
 				if err := logClean(logToolService, machine.Clean); err != nil {
 					return err
 				}
 			}
-
-			log.Info("logs cleaned successfully")
 			return nil
 		},
 	}
@@ -181,18 +184,18 @@ func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
 
 	errs := []error{}
 	for _, path := range config.Path {
-		if DryRun {
-			if files, err := svc.DryClean(path, daysOld); err == nil {
-				log.Debugf("%d files found for deletion: %v", len(files), files)
-			} else {
-				log.Errorf("log clean errors %v", files)
-				errs = append(errs, err)
-			}
-			continue
+		if files, err := svc.Cleanable(path, daysOld); err == nil {
+			log.Debugf("%d file found for deletion: %v", len(files), files)
+		} else {
+			errs = append(errs, err)
 		}
 
-		if err := svc.Clean(path, daysOld); err != nil {
-			errs = append(errs, err)
+		if !DryRun {
+			if err := svc.Clean(path, daysOld); err != nil {
+				errs = append(errs, err)
+			} else {
+				log.Info("logs cleaned successfully for %s", path)
+			}
 		}
 	}
 

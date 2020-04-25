@@ -6,6 +6,7 @@ import (
 
 	"github.com/kushsharma/servo/backup"
 	"github.com/kushsharma/servo/internal"
+	"github.com/kushsharma/servo/tunnel"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -34,19 +35,15 @@ func initBackup() *cobra.Command {
 			//s3Client := s3.New(awsSession)
 
 			for _, machine := range appConfig.Machines {
-				tnl, err := createTunnel(machine)
-				if err != nil {
-					return err
-				}
-				defer tnl.Close()
-
-				fsService := backup.NewFSService(tnl, machine.Backup)
+				fsService := backup.NewFSService(machine.Backup)
 				if err := backupFS(fsService); err != nil {
 					return err
 				}
 				fmt.Printf("fs backup completed successfully for %s\n", machine.Name)
 
-				dbService := backup.NewDBService(tnl, machine.Backup)
+				localTnl := tunnel.NewLocalTunnel()
+				defer localTnl.Close()
+				dbService := backup.NewDBService(localTnl, machine.Backup)
 				if err := backupDB(dbService); err != nil {
 					return err
 				}

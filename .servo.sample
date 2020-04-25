@@ -1,27 +1,29 @@
 machines:
   - name: coolmachine
-    conn: remote # or "local"
-    auth:
-      address: "0.0.0.0:22" 
-      user: username
-      keyfile: /tmp/private.pem
-      keypassword: somepassword
-    clean:
-      olderthan: 10 # days
-      path:
-        - /var/app/logs
-        - /tmp/log
+    schedule: "@daily"
     backup:
-      schedule: "@daily"
-      bucket: s3bucket
+      source: local
+      target: s3
+      bucket: sweetbuck
       prefix: temp/
       fspath:
-        - /tmp/log
-      db:
-        user: root
-        password: somepassword
-s3: # digital ocean space
-  key: AAAA
-  secret: AAAAAAAAAAAAAAAAAA
-  endpoint: sgp1.digitaloceanspaces.com
+        - /tmp
+      db: # only local host is supported for now
+        user: ""
+        password: ""
+    clean:
+      source: local
+      olderthan: 5
+      path:
+        - /tmp
+remotes: # s3/local/ssh
+  ssh:
+    host: "0.0.0.0:22" 
+    user: root
+    key_file: /tmp/servo.pem
+    key_file_pass: somepassword
+  s3: # DO space
+    key: AAAA
+    secret: AAAAAAAAAAAAAAAAAA
+    endpoint: sgp1.digitaloceanspaces.com
 

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/kushsharma/servo/internal"
-	"github.com/kushsharma/servo/tunnel"
 
 	rcmd "github.com/rclone/rclone/cmd"
 	rops "github.com/rclone/rclone/fs/operations"
@@ -15,7 +14,6 @@ import (
 )
 
 type FSService struct {
-	tnl    tunnel.Executioner
 	config internal.BackupConfig
 	files  []string
 }
@@ -33,7 +31,7 @@ func (svc *FSService) Migrate() error {
 
 	for _, sourcePath := range svc.config.Fspath {
 		destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, sourcePath)
-		copyCommand := fmt.Sprintf("local:%s s3:%s --ignore-existing", sourcePath, destinationPath)
+		copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", svc.config.SourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
 
 		fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
 		if srcFileName == "" {
@@ -57,9 +55,8 @@ func (svc *FSService) Close() error {
 	return nil
 }
 
-func NewFSService(tnl tunnel.Executioner, config internal.BackupConfig) *FSService {
+func NewFSService(config internal.BackupConfig) *FSService {
 	fs := new(FSService)
-	fs.tnl = tnl
 	fs.config = config
 	fs.files = []string{}
 

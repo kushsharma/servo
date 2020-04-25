@@ -10,8 +10,8 @@ import (
 	_ "github.com/rclone/rclone/backend/s3"
 
 	"github.com/kushsharma/servo/internal"
-	"github.com/kushsharma/servo/tunnel"
 	rfs "github.com/rclone/rclone/fs"
+	robscure "github.com/rclone/rclone/fs/config/obscure"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,14 +48,6 @@ func InitCommands() *cobra.Command {
 	return rootCmd
 }
 
-func createTunnel(machine internal.MachineConfig) (tunnel.Executioner, error) {
-	if machine.ConnectionType == "remote" {
-		return tunnel.NewSSHTunnel(machine.Auth)
-	}
-
-	return tunnel.NewLocalTunnel(), nil
-}
-
 // overrideConfigCallback will provide custom config getter for rclone
 func overrideConfigCallback() error {
 	appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
@@ -76,13 +68,31 @@ func overrideConfigCallback() error {
 			case "provider":
 				return "Digital Ocean", true
 			case "access_key_id":
-				return appConfig.S3.Key, true
+				return appConfig.Remotes.S3.Key, true
 			case "secret_access_key":
-				return appConfig.S3.Secret, true
+				return appConfig.Remotes.S3.Secret, true
 			case "endpoint":
-				return appConfig.S3.Endpoint, true
+				return appConfig.Remotes.S3.Endpoint, true
 			case "acl":
 				return "private", true
+			}
+		} else if section == "ssh" {
+			switch key {
+			case "type":
+				return "ssh", true
+			case "host":
+				return appConfig.Remotes.SSH.Host, true
+			case "user":
+				return appConfig.Remotes.SSH.User, true
+			case "key_file":
+				return appConfig.Remotes.SSH.KeyFile, true
+			case "key_file_pass":
+				if obs, err := robscure.Obscure(appConfig.Remotes.SSH.KeyFilePassword); err != nil {
+					return obs, true
+				}
+				return "", false
+			case "key_use_agent":
+				return "true", true
 			}
 		}
 

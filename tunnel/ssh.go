@@ -30,7 +30,7 @@ func (tnl *SSHTunnel) Close() error {
 func NewSSHTunnel(authConfig internal.SSHAuthConfig) (*SSHTunnel, error) {
 	tnl := new(SSHTunnel)
 
-	if authConfig.Address == "" || authConfig.User == "" {
+	if authConfig.Host == "" || authConfig.User == "" {
 		return nil, errors.New("invalid machine auth config")
 	}
 	sshclient, err := sshtunnel.ConnectWithKeyPassphrase(authConfig)

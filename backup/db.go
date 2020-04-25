@@ -26,6 +26,7 @@ mysqldump -u{{.User}} {{.Password}} --all-databases --single-transaction --quick
 	tempShellFileName   = "/tmp/servo_db_dump.sh"
 	backupS3Directory   = "db"
 	backupFileTimestamp = "2006-01-02_15-04-05"
+	sourceConnection    = "local" //only local connection is supported for source for now
 )
 
 var (
@@ -96,7 +97,7 @@ func (svc *DBService) Migrate() error {
 	defer cancel()
 
 	destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, svc.file)
-	copyCommand := fmt.Sprintf("local:%s s3:%s --ignore-existing", svc.file, destinationPath)
+	copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", sourceConnection, svc.file, svc.config.TargetConnection, destinationPath)
 
 	fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
 	if err := rops.CopyFile(ctx, fdst, fsrc, srcFileName, srcFileName); err != nil {

@@ -80,7 +80,7 @@ func ConnectWithKeyPassphrase(auth internal.SSHAuthConfig) (*Client, error) {
 		return nil, err
 	}
 
-	signer, err := ssh.ParsePrivateKeyWithPassphrase(key, []byte(auth.KeyPassword))
+	signer, err := ssh.ParsePrivateKeyWithPassphrase(key, []byte(auth.KeyFilePassword))
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func ConnectWithKeyPassphrase(auth internal.SSHAuthConfig) (*Client, error) {
 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
 	}
 
-	return Dial("tcp", auth.Address, config)
+	return Dial("tcp", auth.Host, config)
 }
 
 // Dial starts a client connection to the given SSH server.

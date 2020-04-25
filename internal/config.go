@@ -3,23 +3,26 @@ package internal
 // ApplicationConfig is populated from yaml config file
 type ApplicationConfig struct {
 	Machines []MachineConfig `yaml:"machines"`
-	S3       S3Config        `yaml:"s3"`
+	Remotes  RemoteConfig    `yaml:"remotes"`
 }
 
 type MachineConfig struct {
-	Name           string        `yaml:"name"`
-	ConnectionType string        `yaml:"conn"`
-	Auth           SSHAuthConfig `yaml:"auth"`
-	Clean          CleanConfig   `yaml:"clean"`
-	Backup         BackupConfig  `yaml:"backup"`
+	Name   string       `yaml:"name"`
+	Clean  CleanConfig  `yaml:"clean"`
+	Backup BackupConfig `yaml:"backup"`
+}
+
+type RemoteConfig struct {
+	SSH SSHAuthConfig `yaml:"auth"`
+	S3  S3Config      `yaml:"s3"`
 }
 
 type SSHAuthConfig struct {
-	Address      string `yaml:"address"`
-	User         string `yaml:"user"`
-	AuthPassword string `yaml:"authpassword"`
-	KeyFile      string `yaml:"keyfile"`
-	KeyPassword  string `yaml:"keypassword"`
+	Host            string `yaml:"host"`
+	User            string `yaml:"user"`
+	AuthPassword    string `yaml:"password"`
+	KeyFile         string `yaml:"key_file"`
+	KeyFilePassword string `yaml:"key_file_pass"`
 }
 
 type S3Config struct {
@@ -29,21 +32,25 @@ type S3Config struct {
 }
 
 type CleanConfig struct {
-	OlderThan int      `yaml:"olderthan"`
-	Path      []string `yaml:"path"`
+	SourceConnection string   `yaml:"source"`
+	OlderThan        int      `yaml:"olderthan"`
+	Path             []string `yaml:"path"`
 }
 
 type BackupConfig struct {
-	Schedule string   `yaml:"schedule"`
-	Bucket   string   `yaml:"bucket"`
-	Prefix   string   `yaml:"prefix"`
-	Fspath   []string `yaml:"fspath"`
-	DB       DBConfig `yaml:"db"`
+	SourceConnection string   `yaml:"source"`
+	TargetConnection string   `yaml:"target"`
+	Bucket           string   `yaml:"bucket"`
+	Prefix           string   `yaml:"prefix"`
+	Fspath           []string `yaml:"fspath"`
+	DB               DBConfig `yaml:"db"`
+	Schedule         string   `yaml:"schedule"`
 }
 
 type DBConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+	Host     string
 }
 
 // RclonePrepare exports env vars required for running rclone commands
