@@ -45,3 +45,13 @@ type DBConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 }
+
+// RclonePrepare exports env vars required for running rclone commands
+func RclonePrepare() {
+	//TODO
+}
+
+// RcloneClean removes rclone env vars once the program is done executing
+func RcloneClean() {
+	//TODO
+}

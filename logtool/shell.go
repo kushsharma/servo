@@ -12,28 +12,6 @@ type ShellService struct {
 	tnl tunnel.Executioner
 }
 
-// Fetch extracts the contents of file
-func (svc *ShellService) Fetch(path, filename string) (string, error) {
-	cmdLine := fmt.Sprintf(`cat %s`, path)
-	output, err := svc.tnl.RunWithOutput(cmdLine)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(output)), nil
-}
-
-//List return file names in the directory
-func (svc *ShellService) List(path string) ([]string, error) {
-	cmdLine := fmt.Sprintf(`find %s -type f`, path)
-	output, err := svc.tnl.RunWithOutput(cmdLine)
-	if err != nil {
-		return nil, err
-	}
-
-	files := strings.Split(string(output), "\n")
-	return files, nil
-}
-
 // Delete remove a single file in the provided absolute path
 func (svc *ShellService) Delete(path string) error {
 	cmdLine := fmt.Sprintf(`rm %s`, path)
@@ -58,7 +36,7 @@ func (svc *ShellService) Clean(path string, daysold int) error {
 
 // DryClean only list files that can be removed instead of actually removing them
 func (svc *ShellService) DryClean(path string, daysold int) ([]string, error) {
-	cmdLine := fmt.Sprintf(`find %s -type f -mtime +%d -print`, path, daysold)
+	cmdLine := fmt.Sprintf(`find "%s" -type f -mtime +%d -print`, path, daysold)
 	output, err := svc.tnl.RunWithOutput(cmdLine)
 	if err != nil {
 		return []string{output}, err

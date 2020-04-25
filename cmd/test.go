@@ -1,15 +1,17 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
-	_ "github.com/rclone/rclone/backend/all" // import all backends
 	rcmd "github.com/rclone/rclone/cmd"
-	rconfig "github.com/rclone/rclone/fs/config"
-	"github.com/rclone/rclone/fs/operations"
+	rops "github.com/rclone/rclone/fs/operations"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
+
+//localfs:./version s3DO:moonwaretech/temp/ --ignore-existing
 
 var ()
 
@@ -19,14 +21,10 @@ func initTest() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("starting test tool...")
 
-			rconfig.LoadConfig()
-			fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(args)
-			// appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
-			// if !ok {
-			// 	return errors.New("unable to find application config")
-			// }
-
-			err := operations.CopyFile(context.Background(), fdst, fsrc, srcFileName, srcFileName)
+			fsrc := rcmd.NewFsSrc([]string{"localfs:./"})
+			var stdout bytes.Buffer
+			err := rops.ListLong(context.Background(), fsrc, &stdout)
+			log.Info(stdout.String())
 
 			return err
 		},

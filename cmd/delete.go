@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -33,12 +34,12 @@ func subDeleteS3() *cobra.Command {
 	return &cobra.Command{
 		Use:     "s3",
 		Short:   "delete all the files provided in bucket that match with key prefix",
-		Example: "servo delete backup temp/path/key/prefix bucketname",
+		Example: "servo delete [s3,log] temp/path/key/prefix bucketname",
 		Args:    cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			prefix := args[0]
 			bucket := args[1]
-			fmt.Println("starting s3 deletion tool...")
+			log.Info("starting s3 deletion tool...")
 
 			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
 			if !ok {
@@ -74,6 +75,7 @@ func deleteS3(client *s3.S3, bucket, prefix string) error {
 	err := client.ListObjectsPages(listInput, func(page *s3.ListObjectsOutput, lastPage bool) bool {
 		for _, item := range page.Contents {
 			fileKeys = append(fileKeys, *item.Key)
+			log.Debugf("file found: %s", *item.Key)
 		}
 		return !lastPage
 	})
@@ -81,14 +83,14 @@ func deleteS3(client *s3.S3, bucket, prefix string) error {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case s3.ErrCodeNoSuchBucket:
-				fmt.Println(s3.ErrCodeNoSuchBucket, aerr.Error())
+				log.Error(s3.ErrCodeNoSuchBucket, aerr.Error())
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err.Error())
 		}
 		return err
 	}
@@ -126,17 +128,17 @@ func deleteS3(client *s3.S3, bucket, prefix string) error {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err.Error())
 		}
 		return err
 	}
 
-	fmt.Printf("all objects in %s are deleted from bucket %s\n", prefix, bucket)
+	log.Infof("all objects in %s are deleted from bucket %s\n", prefix, bucket)
 	return nil
 }
 
@@ -145,7 +147,7 @@ func subDeleteLog() *cobra.Command {
 		Use:   "log",
 		Short: "delete logs older than provided days",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("starting log cleaner...")
+			log.Info("starting log cleaner...")
 
 			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
 			if !ok {
@@ -165,7 +167,7 @@ func subDeleteLog() *cobra.Command {
 				}
 			}
 
-			fmt.Println("logs cleaned successfully")
+			log.Info("logs cleaned successfully")
 			return nil
 		},
 	}
@@ -179,11 +181,18 @@ func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
 
 	errs := []error{}
 	for _, path := range config.Path {
-		files, err := svc.DryClean(path, daysOld)
-		fmt.Print(files)
-		if err != nil {
-			errs = append(errs, err)
+		if DryRun {
+			if files, err := svc.DryClean(path, daysOld); err == nil {
+				log.Debugf("%d files found for deletion: %v", len(files), files)
+			} else {
+				log.Errorf("log clean errors %v", files)
+				errs = append(errs, err)
+			}
 			continue
+		}
+
+		if err := svc.Clean(path, daysOld); err != nil {
+			errs = append(errs, err)
 		}
 	}
 

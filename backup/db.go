@@ -9,21 +9,23 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/kushsharma/servo/internal"
 	"github.com/kushsharma/servo/tunnel"
+	rcmd "github.com/rclone/rclone/cmd"
+	rops "github.com/rclone/rclone/fs/operations"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
 	databaseDumpCommand = `#!/bin/sh
 mysqldump -u{{.User}} {{.Password}} --all-databases --single-transaction --quick --lock-tables=false --triggers | gzip > {{.Name}}
 `
-	tempShellFileName = "/tmp/servo_db_dump.sh"
-	backupS3Directory = "db"
+	tempShellFileName   = "/tmp/servo_db_dump.sh"
+	backupS3Directory   = "db"
+	backupFileTimestamp = "2006-01-02_15-04-05"
 )
 
 var (
@@ -32,7 +34,6 @@ var (
 
 type DBService struct {
 	tnl    tunnel.Executioner
-	s3     *s3.S3
 	config internal.BackupConfig
 	file   string
 }
@@ -44,7 +45,12 @@ type dumpTemplateInput struct {
 }
 
 // Prepare dumps database to a file
-func (svc *DBService) Prepare() error {
+func (svc *DBService) Prepare() (err error) {
+	if svc.config.DB.User == "" {
+		log.Info("db backup skipped, no config found")
+		return nil
+	}
+
 	dbDumpTemplate, err := template.New("dbdump").Parse(databaseDumpCommand)
 	if err != nil {
 		return err
@@ -55,7 +61,7 @@ func (svc *DBService) Prepare() error {
 	if svc.config.DB.Password != "" {
 		input.Password = fmt.Sprintf("-p%s", svc.config.DB.Password)
 	}
-	input.Name = fmt.Sprintf("/tmp/db_dump_%s.sql.gz", time.Now().Format("2006-01-02_15-04-05"))
+	input.Name = fmt.Sprintf("/tmp/db_dump_%s.sql.gz", time.Now().Format(backupFileTimestamp))
 	svc.file = input.Name
 
 	buf := &bytes.Buffer{}
@@ -86,48 +92,35 @@ func (svc *DBService) Migrate() error {
 	if svc.file == "" {
 		return nil
 	}
-
-	uploader := s3manager.NewUploaderWithClient(svc.s3)
-	f, err := os.Open(svc.file)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	object := svc.s3object(f, svc.file)
-	ctx, cancel := context.WithTimeout(context.Background(), UploadTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
 	defer cancel()
 
-	_, err = uploader.UploadWithContext(ctx, object)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, svc.file)
+	copyCommand := fmt.Sprintf("local:%s s3:%s --ignore-existing", svc.file, destinationPath)
 
-	defer func() {
-		//clean db file once upload is complete
-		err = os.Remove(svc.file)
-		if err != nil {
-			fmt.Printf("%v: %v\n", errRemovingTemporaryFiles, err)
-		}
-	}()
+	fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
+	if err := rops.CopyFile(ctx, fdst, fsrc, srcFileName, srcFileName); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (svc *DBService) s3object(f *os.File, path string) *s3manager.UploadInput {
-	filename := filepath.Base(path)
-	return &s3manager.UploadInput{
-		Bucket: aws.String(svc.config.Bucket),
-		Key:    aws.String(filepath.Join(svc.config.Prefix, backupS3Directory, filename)),
-		ACL:    aws.String("private"),
-		Body:   f,
+// Close clean db file once upload is complete
+func (svc *DBService) Close() error {
+	if svc.file != "" {
+		if err := os.Remove(svc.file); err != nil {
+			log.Errorf("%v: %v\n", errRemovingTemporaryFiles, err)
+			return err
+		}
 	}
+
+	return nil
 }
 
-func NewDBService(tnl tunnel.Executioner, s3Client *s3.S3, config internal.BackupConfig) *DBService {
+func NewDBService(tnl tunnel.Executioner, config internal.BackupConfig) *DBService {
 	db := new(DBService)
 	db.tnl = tnl
-	db.s3 = s3Client
 	db.config = config
 	db.file = ""
 

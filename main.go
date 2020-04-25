@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/kushsharma/servo/cmd"
 	"github.com/kushsharma/servo/internal"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
@@ -30,7 +30,18 @@ var (
 
 func main() {
 	initConfig()
-	cmd.InitCommands()
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: false,
+		FullTimestamp: true,
+	})
+
+	rootCmd := cmd.InitCommands()
+	rootCmd.Execute()
 }
 
 func initConfig() {
@@ -41,6 +52,7 @@ func initConfig() {
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
+			log.Panic("unable to find home directory")
 			panic(err)
 		}
 
@@ -62,7 +74,7 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err == nil {
 		configFilePath := viper.ConfigFileUsed()
-		fmt.Println("Using config file:", configFilePath)
+		log.Infof("using config file: %s", configFilePath)
 
 		// ready yaml seperately because viper parsing sucks
 		configByte, err := ioutil.ReadFile(configFilePath)

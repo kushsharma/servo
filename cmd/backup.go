@@ -7,10 +7,6 @@ import (
 	"github.com/kushsharma/servo/backup"
 	"github.com/kushsharma/servo/internal"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,7 +14,7 @@ import (
 var ()
 
 func initBackup() *cobra.Command {
-	return &cobra.Command{
+	bcmd := &cobra.Command{
 		Use: "backup",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("starting backup tool...")
@@ -28,14 +24,14 @@ func initBackup() *cobra.Command {
 				return errors.New("unable to find application config")
 			}
 
-			s3Config := &aws.Config{
-				Credentials: credentials.NewStaticCredentials(appConfig.S3.Key, appConfig.S3.Secret, ""),
-				Endpoint:    aws.String(appConfig.S3.Endpoint),
-				Region:      aws.String("us-east-1"),
-			}
+			// s3Config := &aws.Config{
+			// 	Credentials: credentials.NewStaticCredentials(appConfig.S3.Key, appConfig.S3.Secret, ""),
+			// 	Endpoint:    aws.String(appConfig.S3.Endpoint),
+			// 	Region:      aws.String("us-east-1"),
+			// }
 			// Create S3 service client
-			awsSession := session.New(s3Config)
-			s3Client := s3.New(awsSession)
+			//awsSession := session.New(s3Config)
+			//s3Client := s3.New(awsSession)
 
 			for _, machine := range appConfig.Machines {
 				tnl, err := createTunnel(machine)
@@ -44,13 +40,13 @@ func initBackup() *cobra.Command {
 				}
 				defer tnl.Close()
 
-				fsService := backup.NewFSService(tnl, s3Client, machine.Backup)
+				fsService := backup.NewFSService(tnl, machine.Backup)
 				if err := backupFS(fsService); err != nil {
 					return err
 				}
 				fmt.Printf("fs backup completed successfully for %s\n", machine.Name)
 
-				dbService := backup.NewDBService(tnl, s3Client, machine.Backup)
+				dbService := backup.NewDBService(tnl, machine.Backup)
 				if err := backupDB(dbService); err != nil {
 					return err
 				}
@@ -60,6 +56,7 @@ func initBackup() *cobra.Command {
 			return nil
 		},
 	}
+	return bcmd
 }
 
 //backupFS
@@ -70,12 +67,14 @@ func backupFS(svc backup.BackupService) error {
 		return err
 	}
 
-	err = svc.Migrate()
-	if err != nil {
-		return err
+	if !DryRun {
+		err = svc.Migrate()
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return svc.Close()
 }
 
 //backupDB
@@ -86,10 +85,12 @@ func backupDB(svc backup.BackupService) error {
 		return err
 	}
 
-	err = svc.Migrate()
-	if err != nil {
-		return err
+	if !DryRun {
+		err = svc.Migrate()
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return svc.Close()
 }

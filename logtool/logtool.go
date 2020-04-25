@@ -6,8 +6,6 @@ package logtool
 
 //LogManager manages logs in a machine instance
 type LogManager interface {
-	Fetch(path string, filename string) (string, error)
-	List(path string) ([]string, error)
 	Delete(path string) error
 	Clean(path string, daysold int) error
 	DryClean(path string, daysold int) ([]string, error)
