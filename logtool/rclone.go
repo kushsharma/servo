@@ -3,9 +3,11 @@ package logtool
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/kushsharma/servo/internal"
 	"github.com/pkg/errors"
 	rcmd "github.com/rclone/rclone/cmd"
 	rfs "github.com/rclone/rclone/fs"
@@ -15,11 +17,12 @@ import (
 )
 
 type RcloneService struct {
+	config internal.CleanConfig
 }
 
 // List provides all the files in directory recursively
 func (svc *RcloneService) List(path string) ([]FileInfo, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), operationTimeout)
 	defer cancel()
 
 	lsCommand := fmt.Sprintf("local:%s", path)
@@ -42,31 +45,41 @@ func (svc *RcloneService) List(path string) ([]FileInfo, error) {
 // Clean removes unwanted files
 func (svc *RcloneService) Clean(path string, minDayAge int) (err error) {
 	files, err := svc.Cleanable(path, minDayAge)
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), operationTimeout)
+	defer cancel()
 
 	//now actually delete them
 	for _, file := range files {
-		fs, fileName := rcmd.NewFsFile(file.Name)
+		fullPath := fmt.Sprintf("%s:%s", svc.config.SourceConnection, filepath.Join(path, file.Name))
+
+		fs, fileName := rcmd.NewFsFile(fullPath)
 		if fileName == "" {
-			return errors.Errorf("%s is a directory or doesn't exist", file.Name)
+			return errors.Errorf("%s is a directory or doesn't exist", fullPath)
 		}
-		fileObj, err := fs.NewObject(context.Background(), fileName)
+		fileObj, err := fs.NewObject(ctx, fileName)
 		if err != nil {
 			return err
 		}
-		if err := operations.DeleteFile(context.Background(), fileObj); err != nil {
+		if err := operations.DeleteFile(ctx, fileObj); err != nil {
 			return err
 		}
+		log.Debug(".")
 	}
-	return err
+	log.Infof("deleted %d files from %s", len(files), path)
+	return nil
 }
 
 // Cleanable don't actually removes the files, only filter and list them
 func (svc *RcloneService) Cleanable(path string, minDayAge int) ([]FileInfo, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), operationTimeout)
 	defer cancel()
 
-	lsCommand := fmt.Sprintf("local:%s", path)
-	fsrc := rcmd.NewFsSrc(strings.Split(lsCommand, " "))
+	fullPath := fmt.Sprintf("%s:%s", svc.config.SourceConnection, path)
+	fsrc := rcmd.NewFsSrc(strings.Split(fullPath, " "))
 
 	files := []FileInfo{}
 	err := rops.ListFn(ctx, fsrc, func(o rfs.Object) {
@@ -84,13 +97,14 @@ func (svc *RcloneService) Cleanable(path string, minDayAge int) ([]FileInfo, err
 			ModifiedTime: modTime,
 		}
 		files = append(files, file)
-		log.Debug(fmt.Sprintf("%9dB %s %s\n", file.Size, file.ModifiedTime.Local().Format("2006-01-02T15:04:05.000000000"), file.Name))
 	})
 
 	return files, err
 }
 
 // NewRcloneService returns a instance of RcloneService that implements LogMangager using rclone in backend
-func NewRcloneService() *RcloneService {
-	return &RcloneService{}
+func NewRcloneService(conf internal.CleanConfig) *RcloneService {
+	svc := new(RcloneService)
+	svc.config = conf
+	return svc
 }

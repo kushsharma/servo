@@ -7,7 +7,7 @@ import "time"
 // that name could cause confusion
 
 const (
-	uploadTimeout = 30 * time.Minute
+	operationTimeout = 30 * time.Minute
 )
 
 type FileInfo struct {

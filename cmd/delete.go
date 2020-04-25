@@ -104,7 +104,7 @@ func deleteS3(client *s3.S3, bucket, prefix string) error {
 	var confirmation string
 	fmt.Scanln(&confirmation)
 	if confirmation != "yes" {
-		fmt.Println("operation aborted")
+		log.Warn("operation aborted")
 		return nil
 	}
 
@@ -138,7 +138,7 @@ func deleteS3(client *s3.S3, bucket, prefix string) error {
 		return err
 	}
 
-	log.Infof("all objects in %s are deleted from bucket %s\n", prefix, bucket)
+	log.Infof("all objects in %s are deleted from bucket %s", prefix, bucket)
 	return nil
 }
 
@@ -155,18 +155,7 @@ func subDeleteLog() *cobra.Command {
 			}
 
 			for _, machine := range appConfig.Machines {
-				// tnl, err := createTunnel(machine)
-				// if err != nil {
-				// 	return err
-				// }
-				// defer tnl.Close()
-
-				// logToolService := logtool.NewShellService(tnl)
-				// if err := logClean(logToolService, machine.Clean); err != nil {
-				// 	return err
-				// }
-
-				logToolService := logtool.NewRcloneService()
+				logToolService := logtool.NewRcloneService(machine.Clean)
 				if err := logClean(logToolService, machine.Clean); err != nil {
 					return err
 				}
@@ -185,7 +174,10 @@ func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
 	errs := []error{}
 	for _, path := range config.Path {
 		if files, err := svc.Cleanable(path, daysOld); err == nil {
-			log.Debugf("%d file found for deletion: %v", len(files), files)
+			log.Infof("%d file found for deletion", len(files))
+			for _, file := range files {
+				log.Debug(fmt.Sprintf("%9dB %s %s\n", file.Size, file.ModifiedTime.Local().Format("2006-01-02T15:04:05.000000000"), file.Name))
+			}
 		} else {
 			errs = append(errs, err)
 		}
@@ -194,7 +186,7 @@ func logClean(svc logtool.LogManager, config internal.CleanConfig) error {
 			if err := svc.Clean(path, daysOld); err != nil {
 				errs = append(errs, err)
 			} else {
-				log.Info("logs cleaned successfully for %s", path)
+				log.Infof("logs cleaned successfully for %s", path)
 			}
 		}
 	}

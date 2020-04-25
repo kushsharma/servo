@@ -24,7 +24,7 @@ const (
 mysqldump -u{{.User}} {{.Password}} --all-databases --single-transaction --quick --lock-tables=false --triggers | gzip > {{.Name}}
 `
 	tempShellFileName   = "/tmp/servo_db_dump.sh"
-	backupS3Directory   = "db"
+	tempDBDumpFilePath  = "/tmp"
 	backupFileTimestamp = "2006-01-02_15-04-05"
 	sourceConnection    = "local" //only local connection is supported for source for now
 )
@@ -35,7 +35,7 @@ var (
 
 type DBService struct {
 	tnl    tunnel.Executioner
-	config internal.BackupConfig
+	config internal.DBBackupConfig
 	file   string
 }
 
@@ -47,7 +47,7 @@ type dumpTemplateInput struct {
 
 // Prepare dumps database to a file
 func (svc *DBService) Prepare() (err error) {
-	if svc.config.DB.User == "" {
+	if svc.config.Auth.User == "" {
 		log.Info("db backup skipped, no config found")
 		return nil
 	}
@@ -58,12 +58,13 @@ func (svc *DBService) Prepare() (err error) {
 	}
 
 	input := new(dumpTemplateInput)
-	input.User = svc.config.DB.User
-	if svc.config.DB.Password != "" {
-		input.Password = fmt.Sprintf("-p%s", svc.config.DB.Password)
+	input.User = svc.config.Auth.User
+	if svc.config.Auth.Password != "" {
+		input.Password = fmt.Sprintf("-p%s", svc.config.Auth.Password)
 	}
-	input.Name = fmt.Sprintf("/tmp/db_dump_%s.sql.gz", time.Now().Format(backupFileTimestamp))
-	svc.file = input.Name
+
+	svc.file = fmt.Sprintf("db_dump_%s.sql.gz", time.Now().Format(backupFileTimestamp))
+	input.Name = filepath.Join(tempDBDumpFilePath, svc.file)
 
 	buf := &bytes.Buffer{}
 	if err := dbDumpTemplate.Execute(buf, input); err != nil {
@@ -78,12 +79,13 @@ func (svc *DBService) Prepare() (err error) {
 		//delete temp file
 		err := os.Remove(tempShellFileName)
 		if err != nil {
-			fmt.Printf("%v: %v\n", errRemovingTemporaryFiles, err)
+			log.Errorf("%v: %v\n", errRemovingTemporaryFiles, err)
 		}
 	}()
 
 	if out, err := svc.tnl.RunWithOutput(fmt.Sprintf("sh -c %s", tempShellFileName)); err != nil {
-		return fmt.Errorf("%s %v", string(out), err)
+		log.Error(string(out))
+		return err
 	}
 	return nil
 }
@@ -96,8 +98,9 @@ func (svc *DBService) Migrate() error {
 	ctx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
 	defer cancel()
 
+	sourcePath := filepath.Join(tempDBDumpFilePath, svc.file)
 	destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, svc.file)
-	copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", sourceConnection, svc.file, svc.config.TargetConnection, destinationPath)
+	copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", sourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
 
 	fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
 	if err := rops.CopyFile(ctx, fdst, fsrc, srcFileName, srcFileName); err != nil {
@@ -119,7 +122,7 @@ func (svc *DBService) Close() error {
 	return nil
 }
 
-func NewDBService(tnl tunnel.Executioner, config internal.BackupConfig) *DBService {
+func NewDBService(tnl tunnel.Executioner, config internal.DBBackupConfig) *DBService {
 	db := new(DBService)
 	db.tnl = tnl
 	db.config = config

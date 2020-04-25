@@ -8,6 +8,7 @@ import (
 	_ "github.com/rclone/rclone/backend/cache"
 	_ "github.com/rclone/rclone/backend/local"
 	_ "github.com/rclone/rclone/backend/s3"
+	_ "github.com/rclone/rclone/backend/sftp"
 
 	"github.com/kushsharma/servo/internal"
 	rfs "github.com/rclone/rclone/fs"
@@ -39,10 +40,13 @@ func InitCommands() *cobra.Command {
 		if Debug {
 			log.SetLevel(log.DebugLevel)
 		}
+		rfs.Config.Progress = Debug
+		rfs.Config.DryRun = DryRun
 		return nil
 	}
 
 	if err := overrideConfigCallback(); err != nil {
+		log.Panic(err)
 		panic(err)
 	}
 	return rootCmd
@@ -79,7 +83,7 @@ func overrideConfigCallback() error {
 		} else if section == "ssh" {
 			switch key {
 			case "type":
-				return "ssh", true
+				return "sftp", true
 			case "host":
 				return appConfig.Remotes.SSH.Host, true
 			case "user":
@@ -87,12 +91,10 @@ func overrideConfigCallback() error {
 			case "key_file":
 				return appConfig.Remotes.SSH.KeyFile, true
 			case "key_file_pass":
-				if obs, err := robscure.Obscure(appConfig.Remotes.SSH.KeyFilePassword); err != nil {
+				if obs, err := robscure.Obscure(appConfig.Remotes.SSH.KeyFilePassword); err == nil {
 					return obs, true
 				}
 				return "", false
-			case "key_use_agent":
-				return "true", true
 			}
 		}
 

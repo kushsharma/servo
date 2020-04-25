@@ -7,13 +7,14 @@ type ApplicationConfig struct {
 }
 
 type MachineConfig struct {
-	Name   string       `yaml:"name"`
-	Clean  CleanConfig  `yaml:"clean"`
-	Backup BackupConfig `yaml:"backup"`
+	Name     string       `yaml:"name"`
+	Schedule string       `yaml:"schedule"`
+	Clean    CleanConfig  `yaml:"clean"`
+	Backup   BackupConfig `yaml:"backup"`
 }
 
 type RemoteConfig struct {
-	SSH SSHAuthConfig `yaml:"auth"`
+	SSH SSHAuthConfig `yaml:"ssh"`
 	S3  S3Config      `yaml:"s3"`
 }
 
@@ -38,27 +39,27 @@ type CleanConfig struct {
 }
 
 type BackupConfig struct {
+	FS FSBackupConfig `yaml:"fs"`
+	DB DBBackupConfig `yaml:"db"`
+}
+
+type FSBackupConfig struct {
 	SourceConnection string   `yaml:"source"`
 	TargetConnection string   `yaml:"target"`
 	Bucket           string   `yaml:"bucket"`
 	Prefix           string   `yaml:"prefix"`
-	Fspath           []string `yaml:"fspath"`
-	DB               DBConfig `yaml:"db"`
-	Schedule         string   `yaml:"schedule"`
+	Path             []string `yaml:"path"`
 }
 
-type DBConfig struct {
+type DBBackupConfig struct {
+	TargetConnection string `yaml:"target"`
+	Bucket           string `yaml:"bucket"`
+	Prefix           string `yaml:"prefix"`
+	Auth             DBAuth `yaml:"auth"`
+}
+
+type DBAuth struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Host     string
-}
-
-// RclonePrepare exports env vars required for running rclone commands
-func RclonePrepare() {
-	//TODO
-}
-
-// RcloneClean removes rclone env vars once the program is done executing
-func RcloneClean() {
-	//TODO
 }

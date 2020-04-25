@@ -2,15 +2,20 @@ machines:
   - name: coolmachine
     schedule: "@daily"
     backup:
-      source: local
-      target: s3
-      bucket: sweetbuck
-      prefix: temp/
-      fspath:
-        - /tmp
-      db: # only local host is supported for now
-        user: ""
-        password: ""
+      fs:
+        source: ssh
+        target: s3
+        bucket: sweetbuck
+        prefix: temp
+        path:
+          - /tmp
+      db: # only local source is supported for now
+        target: s3
+        bucket: sweetbuck
+        prefix: database/site
+        auth:
+          user: ""
+          password: ""
     clean:
       source: local
       olderthan: 5
@@ -18,7 +23,7 @@ machines:
         - /tmp
 remotes: # s3/local/ssh
   ssh:
-    host: "0.0.0.0:22" 
+    host: 0.0.0.0
     user: root
     key_file: /tmp/servo.pem
     key_file_pass: somepassword

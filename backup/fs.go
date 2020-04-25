@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/kushsharma/servo/internal"
+	log "github.com/sirupsen/logrus"
 
 	rcmd "github.com/rclone/rclone/cmd"
 	rops "github.com/rclone/rclone/fs/operations"
@@ -14,7 +15,7 @@ import (
 )
 
 type FSService struct {
-	config internal.BackupConfig
+	config internal.FSBackupConfig
 	files  []string
 }
 
@@ -25,11 +26,11 @@ func (svc *FSService) Prepare() error {
 
 // Migrate push fs items to s3 bucket
 func (svc *FSService) Migrate() error {
-	if len(svc.config.Fspath) == 0 {
+	if len(svc.config.Path) == 0 {
 		return nil
 	}
 
-	for _, sourcePath := range svc.config.Fspath {
+	for _, sourcePath := range svc.config.Path {
 		destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, sourcePath)
 		copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", svc.config.SourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
 
@@ -46,6 +47,7 @@ func (svc *FSService) Migrate() error {
 				return err
 			}
 		}
+		log.Debug(".")
 	}
 	return nil
 }
@@ -55,7 +57,7 @@ func (svc *FSService) Close() error {
 	return nil
 }
 
-func NewFSService(config internal.BackupConfig) *FSService {
+func NewFSService(config internal.FSBackupConfig) *FSService {
 	fs := new(FSService)
 	fs.config = config
 	fs.files = []string{}
