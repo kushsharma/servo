@@ -16,6 +16,12 @@ Server management tool
 
 ## Notes
 
+#### Sample commands
+ * servo backup
+ * servo delete s3 some/path bucket_name -v
+ * servo delete log --dry-run --verbose
+ * servo service
+
 #### servo config *.servo* can be placed in
  * same folder as binary
  * ~/.servo

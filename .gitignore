@@ -3,3 +3,4 @@ servo
 .vscode
 *.pem
 tmp
+*.log

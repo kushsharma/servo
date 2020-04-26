@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,9 +16,9 @@ import (
 
 var (
 	// Version is app version
-	Version = ""
+	Version = "0"
 	// Build is build date of this executable
-	Build = ""
+	Build = "0"
 	// AppName of this executable
 	AppName = "servo"
 
@@ -27,12 +28,21 @@ var (
 	// AppConfig stores all the application specific configuration
 	// required for various auth and actions
 	AppConfig internal.ApplicationConfig
+
+	//LogFilePath where output of this application is written into
+	LogFilePath = AppName + ".log"
 )
 
 func main() {
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer
-	log.SetOutput(os.Stdout)
+
+	logFile, err := os.OpenFile(LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file for logging: %v", err)
+	}
+	defer logFile.Close()
+	log.SetOutput(io.MultiWriter(os.Stdout, logFile))
 	log.SetLevel(log.InfoLevel)
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: false,
