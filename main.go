@@ -30,7 +30,7 @@ var (
 	AppConfig internal.ApplicationConfig
 
 	//LogFilePath where output of this application is written into
-	LogFilePath = AppName + ".log"
+	LogFilePath = "/tmp/" + AppName + ".log"
 )
 
 func main() {

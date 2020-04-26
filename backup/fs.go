@@ -30,26 +30,27 @@ func (svc *FSService) Migrate() error {
 		return nil
 	}
 
+	errs := []error{}
 	for _, sourcePath := range svc.config.Path {
+		ctx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
+		defer cancel()
+
 		destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, sourcePath)
 		copyCommand := fmt.Sprintf("%s:%s %s:%s", svc.config.SourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
 
 		fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
 		if srcFileName == "" {
-			if err := rsync.CopyDir(context.Background(), fdst, fsrc, false); err != nil {
-				return err
+			if err := rsync.CopyDir(ctx, fdst, fsrc, false); err != nil {
+				errs = append(errs, err)
 			}
 		} else {
-			ctx, cancel := context.WithTimeout(context.Background(), uploadTimeout)
-			defer cancel()
-
 			if err := rops.CopyFile(ctx, fdst, fsrc, srcFileName, srcFileName); err != nil {
-				return err
+				errs = append(errs, err)
 			}
 		}
 		log.Debug(".")
 	}
-	return nil
+	return internal.ErrMerge(errs)
 }
 
 // Close nil

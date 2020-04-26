@@ -113,7 +113,7 @@ func (svc *DBService) Migrate() error {
 // Close clean db file once upload is complete
 func (svc *DBService) Close() error {
 	if svc.file != "" {
-		if err := os.Remove(svc.file); err != nil {
+		if err := os.Remove(filepath.Join(tempDBDumpFilePath, svc.file)); err != nil {
 			log.Errorf("%v: %v\n", errRemovingTemporaryFiles, err)
 			return err
 		}

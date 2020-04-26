@@ -16,9 +16,20 @@ var ()
 
 func initBackup() *cobra.Command {
 	bcmd := &cobra.Command{
-		Use: "backup",
+		Use:  "backup",
+		Long: "backup file system and database provided in config",
+	}
+	bcmd.AddCommand(subBackupFS())
+	bcmd.AddCommand(subBackupDB())
+	return bcmd
+}
+
+func subBackupDB() *cobra.Command {
+	return &cobra.Command{
+		Use:     "db",
+		Example: "servo backup db",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.Info("starting backup tool...")
+			log.Info("starting db backup tool...")
 
 			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
 			if !ok {
@@ -26,12 +37,6 @@ func initBackup() *cobra.Command {
 			}
 
 			for _, machine := range appConfig.Machines {
-				fsService := backup.NewFSService(machine.Backup.FS)
-				if err := backupFS(fsService); err != nil {
-					return err
-				}
-				log.Infof("fs backup completed successfully for %s\n", machine.Name)
-
 				localTnl := tunnel.NewLocalTunnel()
 				defer localTnl.Close()
 				dbService := backup.NewDBService(localTnl, machine.Backup.DB)
@@ -44,7 +49,31 @@ func initBackup() *cobra.Command {
 			return nil
 		},
 	}
-	return bcmd
+}
+
+func subBackupFS() *cobra.Command {
+	return &cobra.Command{
+		Use:     "fs",
+		Example: "servo backup fs --dry-run --verbose",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			log.Info("starting fs backup tool...")
+
+			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
+			if !ok {
+				return errors.New("unable to find application config")
+			}
+
+			for _, machine := range appConfig.Machines {
+				fsService := backup.NewFSService(machine.Backup.FS)
+				if err := backupFS(fsService); err != nil {
+					return err
+				}
+				log.Infof("fs backup completed successfully for %s\n", machine.Name)
+			}
+
+			return nil
+		},
+	}
 }
 
 //backupFS

@@ -21,7 +21,7 @@ run: build
 clean:
 	@rm -rf ${EXECUTABLE} dist/
 
-build_linux:
+build_nix:
 	@env GOOS=linux GOARCH=amd64 go build -ldflags "-X 'main.Version=${VERSION}' -X 'main.Build=${BUILD}' -X 'main.AppName=${EXECUTABLE}'" -o ${EXECUTABLE} ./main.go
 
 build_mac:

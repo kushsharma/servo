@@ -4,3 +4,4 @@ servo
 *.pem
 tmp
 *.log
+.DS_Store
