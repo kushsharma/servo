@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/kushsharma/servo/cmd"
@@ -39,6 +40,7 @@ func main() {
 	})
 
 	initConfig()
+	internal.InitStat(Version)
 	rootCmd := cmd.InitCommands()
 	rootCmd.Execute()
 }
@@ -61,6 +63,8 @@ func initConfig() {
 		viper.AddConfigPath(".")
 		// search config in home directory
 		viper.AddConfigPath(home)
+		// search config in ~/.config/servo/.servo
+		viper.AddConfigPath(filepath.Join(home, ".config", "servo"))
 	}
 
 	viper.SetConfigType("yaml")
@@ -73,7 +77,7 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err == nil {
 		configFilePath := viper.ConfigFileUsed()
-		log.Infof("using config file: %s", configFilePath)
+		log.Debugf("using config file: %s", configFilePath)
 
 		// ready yaml seperately because viper parsing sucks
 		configByte, err := ioutil.ReadFile(configFilePath)

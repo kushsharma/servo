@@ -10,7 +10,7 @@ EXECUTABLE="servo"
 
 all: build
 
-.PHONY: build test clean generate dist init
+.PHONY: build test clean generate dist init build_linux build_mac
 
 build: 
 	@go build -ldflags "-X 'main.Version=${VERSION}' -X 'main.Build=${BUILD}' -X 'main.AppName=${EXECUTABLE}'" -o ${EXECUTABLE} ./main.go
@@ -19,4 +19,10 @@ run: build
 	@./${EXECUTABLE}
 
 clean:
-	rm -rf main dist/
+	@rm -rf ${EXECUTABLE} dist/
+
+build_linux:
+	@env GOOS=linux GOARCH=amd64 go build -ldflags "-X 'main.Version=${VERSION}' -X 'main.Build=${BUILD}' -X 'main.AppName=${EXECUTABLE}'" -o ${EXECUTABLE} ./main.go
+
+build_mac:
+	@env GOOS=darwin GOARCH=amd64 go build -ldflags "-X 'main.Version=${VERSION}' -X 'main.Build=${BUILD}' -X 'main.AppName=${EXECUTABLE}'" -o ${EXECUTABLE} ./main.go

@@ -1,12 +1,7 @@
-package routes
-
-import (
-	"encoding/json"
-	"net/http"
-)
+package internal
 
 var (
-	AppStats = new(ApplicationStats)
+	AppStats *ApplicationStats
 )
 
 // ApplicationStats contains basic service stats
@@ -16,6 +11,15 @@ type ApplicationStats struct {
 	TimesLogError      int `json:"times_log_error"`
 	TimesBackupFSError int `json:"times_backup_fs_error"`
 	TimesBackupDBError int `json:"times_backup_db_error"`
+
+	Version string `json:"version"`
+}
+
+// InitStat initializes basic application stats
+func InitStat(version string) *ApplicationStats {
+	AppStats = new(ApplicationStats)
+	AppStats.Version = version
+	return AppStats
 }
 
 func (s *ApplicationStats) LogCleaned() {
@@ -36,10 +40,4 @@ func (s *ApplicationStats) BackupFSError() {
 
 func (s *ApplicationStats) BackupDBError() {
 	s.TimesBackupDBError++
-}
-
-func StatsHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(AppStats)
 }

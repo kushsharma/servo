@@ -47,35 +47,37 @@ func initService() *cobra.Command {
 
 					//backup schedule
 					CronManager.AddFunc(machine.Schedule, func() {
+
+						//fs backup scheduled job
 						fsService := backup.NewFSService(machine.Backup.FS)
 						if err := backupFS(fsService); err != nil {
 							log.Error(err)
-							routes.AppStats.BackupFSError()
+							internal.AppStats.BackupFSError()
+						} else {
+							log.Infof("fs backup completed successfully for %s\n", machine.Name)
 						}
-						log.Infof("fs backup completed successfully for %s\n", machine.Name)
 
+						//db backup scheduled job
 						localTnl := tunnel.NewLocalTunnel()
 						defer localTnl.Close()
 						dbService := backup.NewDBService(localTnl, machine.Backup.DB)
 						if err := backupDB(dbService); err != nil {
 							log.Error(err)
-							routes.AppStats.BackupDBError()
+							internal.AppStats.BackupDBError()
+						} else {
+							log.Infof("db backup completed successfully for %s\n", machine.Name)
 						}
-						log.Infof("db backup completed successfully for %s\n", machine.Name)
+						internal.AppStats.Backedup()
 
-						routes.AppStats.Backedup()
-					})
-
-					//log clean up schedule
-					CronManager.AddFunc(machine.Schedule, func() {
+						//log clean up scheduled job
 						logToolService := logtool.NewRcloneService(machine.Clean)
 						if err := logClean(logToolService, machine.Clean); err != nil {
 							log.Error(err)
-							routes.AppStats.LogCleanError()
-							return
+							internal.AppStats.LogCleanError()
+						} else {
+							log.Infof("logs cleaned successfully for %s\n", machine.Name)
+							internal.AppStats.LogCleaned()
 						}
-
-						routes.AppStats.LogCleaned()
 					})
 				} else {
 					log.Panic(err)
