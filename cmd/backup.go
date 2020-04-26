@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/kushsharma/servo/backup"
 	"github.com/kushsharma/servo/internal"
 	"github.com/kushsharma/servo/tunnel"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,7 +18,7 @@ func initBackup() *cobra.Command {
 	bcmd := &cobra.Command{
 		Use: "backup",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("starting backup tool...")
+			log.Info("starting backup tool...")
 
 			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
 			if !ok {
@@ -30,7 +30,7 @@ func initBackup() *cobra.Command {
 				if err := backupFS(fsService); err != nil {
 					return err
 				}
-				fmt.Printf("fs backup completed successfully for %s\n", machine.Name)
+				log.Infof("fs backup completed successfully for %s\n", machine.Name)
 
 				localTnl := tunnel.NewLocalTunnel()
 				defer localTnl.Close()
@@ -38,7 +38,7 @@ func initBackup() *cobra.Command {
 				if err := backupDB(dbService); err != nil {
 					return err
 				}
-				fmt.Printf("db backup completed successfully for %s\n", machine.Name)
+				log.Infof("db backup completed successfully for %s\n", machine.Name)
 			}
 
 			return nil

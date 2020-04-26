@@ -4,14 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kushsharma/servo/internal"
-	"github.com/kushsharma/servo/logtool"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/kushsharma/servo/internal"
+	"github.com/kushsharma/servo/logtool"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -4,8 +4,10 @@ go 1.14
 
 require (
 	github.com/aws/aws-sdk-go v1.30.9
+	github.com/gorilla/mux v1.7.4
 	github.com/pkg/errors v0.9.1
 	github.com/rclone/rclone v1.51.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.0

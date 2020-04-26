@@ -32,7 +32,7 @@ func (svc *FSService) Migrate() error {
 
 	for _, sourcePath := range svc.config.Path {
 		destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, sourcePath)
-		copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", svc.config.SourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
+		copyCommand := fmt.Sprintf("%s:%s %s:%s", svc.config.SourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
 
 		fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
 		if srcFileName == "" {

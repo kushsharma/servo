@@ -29,8 +29,6 @@ var (
 )
 
 func main() {
-	initConfig()
-
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer
 	log.SetOutput(os.Stdout)
@@ -40,6 +38,7 @@ func main() {
 		FullTimestamp: true,
 	})
 
+	initConfig()
 	rootCmd := cmd.InitCommands()
 	rootCmd.Execute()
 }

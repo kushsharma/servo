@@ -100,7 +100,7 @@ func (svc *DBService) Migrate() error {
 
 	sourcePath := filepath.Join(tempDBDumpFilePath, svc.file)
 	destinationPath := filepath.Join(svc.config.Bucket, svc.config.Prefix, svc.file)
-	copyCommand := fmt.Sprintf("%s:%s %s:%s --ignore-existing", sourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
+	copyCommand := fmt.Sprintf("%s:%s %s:%s", sourceConnection, sourcePath, svc.config.TargetConnection, destinationPath)
 
 	fsrc, srcFileName, fdst := rcmd.NewFsSrcFileDst(strings.Split(copyCommand, " "))
 	if err := rops.CopyFile(ctx, fdst, fsrc, srcFileName, srcFileName); err != nil {

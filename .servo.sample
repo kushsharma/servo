@@ -1,6 +1,6 @@
 machines:
   - name: coolmachine
-    schedule: "@daily"
+    schedule: "@daily" # "@every 0h0m5s" "* * * * *" "1 * * * *" "@daily" "@hourly"
     backup:
       fs:
         source: ssh

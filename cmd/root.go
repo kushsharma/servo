@@ -3,24 +3,30 @@ package cmd
 import (
 	"errors"
 
-	// import fs backends
-	_ "github.com/rclone/rclone/backend/alias"
+	"github.com/kushsharma/servo/internal"
+	_ "github.com/rclone/rclone/backend/alias" // import fs backends
 	_ "github.com/rclone/rclone/backend/cache"
 	_ "github.com/rclone/rclone/backend/local"
 	_ "github.com/rclone/rclone/backend/s3"
 	_ "github.com/rclone/rclone/backend/sftp"
-
-	"github.com/kushsharma/servo/internal"
 	rfs "github.com/rclone/rclone/fs"
 	robscure "github.com/rclone/rclone/fs/config/obscure"
+	cron "github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	Debug  = false
+	//Debug used for logging
+	Debug = false
+	//DryRun used for testing actions
 	DryRun = false
+	//IgnoreExisting will not migrate files that are already present in the destination
+	IgnoreExisting = true
+
+	//CronManager schedules cron jobs
+	CronManager = cron.New()
 )
 
 // InitCommands initializes application cli interface
@@ -29,10 +35,11 @@ func InitCommands() *cobra.Command {
 		Use:     viper.GetString("appname"),
 		Version: viper.GetString("version"),
 	}
+	rootCmd.AddCommand(initTest())
 	rootCmd.AddCommand(initBackup())
 	rootCmd.AddCommand(initDelete())
 	rootCmd.AddCommand(initVersion())
-	rootCmd.AddCommand(initTest())
+	rootCmd.AddCommand(initService())
 
 	rootCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "d", false, "does not actually perform the action")
 	rootCmd.PersistentFlags().BoolVarP(&Debug, "verbose", "v", false, "debug level logs")
@@ -42,6 +49,7 @@ func InitCommands() *cobra.Command {
 		}
 		rfs.Config.Progress = Debug
 		rfs.Config.DryRun = DryRun
+		rfs.Config.IgnoreExisting = IgnoreExisting
 		return nil
 	}
 
