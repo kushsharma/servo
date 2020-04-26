@@ -1,0 +1,12 @@
+[Unit]
+Description=Server management tool
+
+[Service]
+Type=simple
+ExecStart=/pkgs/servo service
+ExecStop=/usr/bin/pkill servo
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

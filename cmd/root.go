@@ -50,6 +50,8 @@ func InitCommands() *cobra.Command {
 		rfs.Config.Progress = Debug
 		rfs.Config.DryRun = DryRun
 		rfs.Config.IgnoreExisting = IgnoreExisting
+
+		log.Debugf("using config file: %s", viper.ConfigFileUsed())
 		return nil
 	}
 

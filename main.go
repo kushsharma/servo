@@ -60,21 +60,26 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		if err != nil {
-			log.Panic("unable to find home directory")
-			panic(err)
-		}
-
 		viper.SetConfigName("." + AppName) //.servo
 
+		// Find home directory
+		if home, err := os.UserHomeDir(); err == nil {
+			// search config in home directory
+			viper.AddConfigPath(home)
+			// search config in ~/.config/servo/.servo
+			viper.AddConfigPath(filepath.Join(home, ".config", "servo"))
+		} else {
+			log.Errorf("unable to find home directory: %v", err)
+		}
+
+		// search in executable dir
+		if execPath, err := os.Executable(); err == nil {
+			viper.AddConfigPath(filepath.Dir(execPath))
+		} else {
+			log.Errorf("unable to find executable: %v", err)
+		}
 		// search in current dir
 		viper.AddConfigPath(".")
-		// search config in home directory
-		viper.AddConfigPath(home)
-		// search config in ~/.config/servo/.servo
-		viper.AddConfigPath(filepath.Join(home, ".config", "servo"))
 	}
 
 	viper.SetConfigType("yaml")
@@ -87,7 +92,6 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err == nil {
 		configFilePath := viper.ConfigFileUsed()
-		log.Debugf("using config file: %s", configFilePath)
 
 		// ready yaml seperately because viper parsing sucks
 		configByte, err := ioutil.ReadFile(configFilePath)
