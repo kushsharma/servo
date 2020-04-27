@@ -10,7 +10,7 @@ Server management tool
 
 
 ## TODO
- * 
+ * When starting service, log what things are monitored
 
 ---
 

@@ -85,6 +85,15 @@ func initService() *cobra.Command {
 				}
 			}
 
+			//log application stats every few hours
+			CronManager.AddFunc("@every 6h", func() {
+				if stats, err := json.Marshal(internal.AppStats); err == nil {
+					log.Infof("logging application stats: %s", string(stats))
+				} else {
+					log.Error(err)
+				}
+			})
+
 			// Inspect the cron job entries' next and previous run times.
 			log.Infof("scheduling %d job", len(CronManager.Entries()))
 
