@@ -4,7 +4,7 @@ Description=Server management tool
 [Service]
 Type=simple
 ExecStart=/pkgs/servo service
-ExecStop=/usr/bin/pkill servo
+ExecStop=/usr/bin/pkill --signal SIGINT servo
 StandardOutput=syslog
 StandardError=syslog
 

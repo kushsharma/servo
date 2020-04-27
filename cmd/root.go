@@ -23,7 +23,7 @@ var (
 	//DryRun used for testing actions
 	DryRun = false
 	//IgnoreExisting will not migrate files that are already present in the destination
-	IgnoreExisting = true
+	IgnoreExisting = false
 
 	//CronManager schedules cron jobs
 	CronManager = cron.New()

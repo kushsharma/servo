@@ -43,7 +43,7 @@ func subBackupDB() *cobra.Command {
 				if err := backupDB(dbService); err != nil {
 					return err
 				}
-				log.Infof("db backup completed successfully for %s\n", machine.Name)
+				log.Infof("db backup completed successfully for %s", machine.Name)
 			}
 
 			return nil
@@ -68,7 +68,7 @@ func subBackupFS() *cobra.Command {
 				if err := backupFS(fsService); err != nil {
 					return err
 				}
-				log.Infof("fs backup completed successfully for %s\n", machine.Name)
+				log.Infof("fs backup completed successfully for %s", machine.Name)
 			}
 
 			return nil

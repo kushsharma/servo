@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -114,6 +115,11 @@ func initService() *cobra.Command {
 			<-termChan
 			log.Info("termination request received")
 			log.Info("waiting for few seconds to clean up scheduled job if any")
+			if stats, err := json.Marshal(internal.AppStats); err == nil {
+				log.Info(string(stats))
+			} else {
+				log.Error(err)
+			}
 
 			//termination request received, stop futher scheduling and wait for running ones to finish
 			<-CronManager.Stop().Done()
