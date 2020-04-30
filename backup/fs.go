@@ -20,6 +20,7 @@ type FSService struct {
 }
 
 // Prepare do any prerequisit for files that needs to be backedup
+// TODO: we can gzip files before uploading
 func (svc *FSService) Prepare() error {
 	return nil
 }

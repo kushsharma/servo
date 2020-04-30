@@ -14,8 +14,10 @@ type MachineConfig struct {
 }
 
 type RemoteConfig struct {
-	SSH SSHAuthConfig `yaml:"ssh"`
-	S3  S3Config      `yaml:"s3"`
+	SSH  SSHAuthConfig `yaml:"ssh"`
+	S3   S3Config      `yaml:"s3"`
+	SES  SESConfig     `yaml:"ses"`
+	SMTP SMTPConfig    `yaml:"smtp"`
 }
 
 type SSHAuthConfig struct {
@@ -30,6 +32,11 @@ type S3Config struct {
 	Key      string `yaml:"key"`
 	Secret   string `yaml:"secret"`
 	Endpoint string `yaml:"endpoint"`
+}
+
+type SESConfig struct {
+	Key    string
+	Secret string
 }
 
 type CleanConfig struct {
@@ -61,5 +68,14 @@ type DBBackupConfig struct {
 type DBAuth struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
-	Host     string
+	Host     string `yaml:"host"`
+}
+
+type SMTPConfig struct {
+	LocalListenIP   string `yaml:"listen_ip"`
+	LocalListenPort int    `yaml:"listen_port"`
+	SMTPUsername    string `yaml:"user"`
+	SMTPPassword    string `yaml:"password"`
+	SMTPServer      string `yaml:"server"`
+	SMTPPort        string `yaml:"port"`
 }

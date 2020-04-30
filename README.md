@@ -11,10 +11,17 @@ Server management tool
 
 ## TODO
  * When starting service, log what things are monitored
+ * Compress logs before uploading them to bucket
 
 ---
 
 ## Notes
+
+#### How to compile
+Install make command and simply run at root path
+```
+make
+```
 
 #### Sample commands
  * servo backup fs

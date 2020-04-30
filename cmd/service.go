@@ -119,6 +119,7 @@ func initService() *cobra.Command {
 			// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
 			// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
 			signal.Notify(termChan, os.Interrupt)
+			signal.Notify(termChan, os.Kill)
 
 			// Block until we receive our signal.
 			<-termChan

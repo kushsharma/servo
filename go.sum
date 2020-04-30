@@ -48,6 +48,8 @@ github.com/anacrolix/ffprobe v1.0.0/go.mod h1:BIw+Bjol6CWjm/CRWrVLk2Vy+UYlkgmBZ0
 github.com/anacrolix/missinggo v1.1.0/go.mod h1:MBJu3Sk/k3ZfGYcS7z18gwfu72Ey/xopPFJJbTi5yIo=
 github.com/anacrolix/tagflag v0.0.0-20180109131632-2146c8d41bf0/go.mod h1:1m2U/K6ZT+JZG0+bdMK6qauP49QT4wE5pmhJXOKKCHw=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
+github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3 h1:LHEOGCi+2CooiWkQB2BlzdMVh6rdRDyt5Wflv4yzvXY=
+github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3/go.mod h1:JS7hed4L1fj0hXcyEejnW57/7LCetXggd+vwrRnYeII=
 github.com/atotto/clipboard v0.1.2/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aws/aws-sdk-go v1.25.31/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.30.9 h1:DntpBUKkchINPDbhEzDRin1eEn1TG9TZFlzWPf0i8to=
@@ -78,10 +80,16 @@ github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3
 github.com/dropbox/dropbox-sdk-go-unofficial v5.4.0+incompatible h1:9jnukMIowLSo3SY7+GTwxmYJv4QC0LxXbo97zHWCyoc=
 github.com/dropbox/dropbox-sdk-go-unofficial v5.4.0+incompatible/go.mod h1:lr+LhMM3F6Y3lW1T9j2U5l7QeuWm87N9+PPXo3yH4qY=
 github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
+github.com/emersion/go-sasl v0.0.0-20190817083125-240c8404624e h1:ba7YsgX5OV8FjGi5ZWml8Jng6oBrJAb3ahqWMJ5Ce8Q=
+github.com/emersion/go-sasl v0.0.0-20190817083125-240c8404624e/go.mod h1:G/dpzLu16WtQpBfQ/z3LYiYJn3ZhKSGWn83fyoyQe/k=
+github.com/emersion/go-smtp v0.12.1 h1:1R8BDqrR2HhlGwgFYcOi+BVTvK1bMjAB65QcVpJ5sNA=
+github.com/emersion/go-smtp v0.12.1/go.mod h1:SD9V/xa4ndMw77lR3Mf7htkp8RBNYuPh9UeuBs9tpUQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/etcd-io/bbolt v1.3.3 h1:gSJmxrs37LgTqR/oyJBWok6k6SvXEUerFTbltIhXkBM=
 github.com/etcd-io/bbolt v1.3.3/go.mod h1:ZF2nL25h33cCyBtcyWeZ2/I3HQOfTP+0PIEvHjkjCrw=
+github.com/flashmob/go-guerrilla v1.6.1 h1:MLkqzRFUJveVAWuQ3s2MNPTAWbvXLt8EFsBoraS6qHA=
+github.com/flashmob/go-guerrilla v1.6.1/go.mod h1:ZT9TRggRsSY4ZVndoyx8TRUxi3tM/nOYtKWKDX94H0I=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -148,6 +156,8 @@ github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht
 github.com/jmespath/go-jmespath v0.3.0 h1:OS12ieG61fsCg5+qLJ+SsW9NicxNkg3b25OyT2yCeUc=
 github.com/jmespath/go-jmespath v0.3.0/go.mod h1:9QtRXoHjLGCJ5IBSaohpXITPlowMeeYCZ7fLUTSywik=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
+github.com/jordan-wright/email v0.0.0-20200322182553-8eef2508c362 h1:5GjN/aV0y9Vlh0/bW7x4+Wk1dfPUXHhZlc1YBQYch8Q=
+github.com/jordan-wright/email v0.0.0-20200322182553-8eef2508c362/go.mod h1:Fy2gCFfZhay8jplf/Csj6cyH/oshQTkLQYZbKkcV+SY=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jtolds/gls v4.2.1+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=

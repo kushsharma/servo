@@ -31,4 +31,7 @@ remotes: # s3/local/ssh
     key: AAAA
     secret: AAAAAAAAAAAAAAAAAA
     endpoint: sgp1.digitaloceanspaces.com
+  smtp:
+    listen_ip: 127.0.0.1
+    listen_port: 2525
 

@@ -3,5 +3,6 @@ servo
 .vscode
 *.pem
 tmp
+etc
 *.log
 .DS_Store
