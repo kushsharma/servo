@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"os"
-	"os/signal"
 
 	"github.com/kushsharma/servo/internal"
 	"github.com/kushsharma/servo/mailrelay"
@@ -31,18 +29,18 @@ func initTest() *cobra.Command {
 			// 	Credentials: credentials.NewStaticCredentials(appConfig.Remotes.SES.Key, appConfig.Remotes.SES.Secret, ""),
 			// })
 
-			//err = mailrelay.StartServerGOSMTP(appConfig.Remotes.SMTP)
-			err = mailrelay.StartServer(appConfig.Remotes.SMTP)
+			err = mailrelay.StartServerGOSMTP(appConfig.Remotes.SMTP)
+			//err = mailrelay.StartServer(appConfig.Remotes.SMTP)
 			if err != nil {
 				return err
 			}
 			// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
 			// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
-			signal.Notify(termChan, os.Interrupt)
-			signal.Notify(termChan, os.Kill)
+			//signal.Notify(termChan, os.Interrupt)
+			//signal.Notify(termChan, os.Kill)
 
 			// // Block until we receive our signal.
-			<-termChan
+			//<-termChan
 
 			return err
 		},

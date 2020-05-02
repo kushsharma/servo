@@ -8,7 +8,7 @@ require (
 	github.com/emersion/go-smtp v0.12.1
 	github.com/flashmob/go-guerrilla v1.6.1
 	github.com/gorilla/mux v1.7.4
-	github.com/jordan-wright/email v0.0.0-20200322182553-8eef2508c362
+	github.com/jordan-wright/email v0.0.0-20200322182553-8eef2508c362 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rclone/rclone v1.51.0
 	github.com/robfig/cron/v3 v3.0.1

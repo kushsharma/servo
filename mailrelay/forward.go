@@ -87,9 +87,6 @@ func sendMail(e *mail.Envelope) error {
 	//fmt.Print(string(mailBytes))
 
 	input := &ses.SendRawEmailInput{
-		Destinations: []*string{
-			aws.String("To:" + Recipient),
-		},
 		RawMessage: &ses.RawMessage{
 			Data: msg.Bytes(),
 		},
@@ -97,7 +94,9 @@ func sendMail(e *mail.Envelope) error {
 
 	//output, err := svc.SendRawEmail(input)
 	fmt.Print(input)
-
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

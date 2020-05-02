@@ -76,6 +76,6 @@ type SMTPConfig struct {
 	LocalListenPort int    `yaml:"listen_port"`
 	SMTPUsername    string `yaml:"user"`
 	SMTPPassword    string `yaml:"password"`
-	SMTPServer      string `yaml:"server"`
-	SMTPPort        string `yaml:"port"`
+	TLSPrivateKey   string `yaml:"tls_private_key"`
+	TLSCert         string `yaml:"tls_cert"`
 }

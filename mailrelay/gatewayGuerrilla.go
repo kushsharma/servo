@@ -11,11 +11,11 @@ import (
 )
 
 // StartServer starts the smtp server
-// use openssl req -new -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out smtpCert.crt -keyout smtpKey.key
+// use `openssl req -new -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out smtpCert.crt -keyout smtpKey.key`
 // to generate private key and signed certificate for TLS
-func StartServer(appConfig internal.SMTPConfig) (err error) {
+func StartServerGuerrilla(config internal.SMTPConfig) (err error) {
 
-	listen := fmt.Sprintf("%s:%d", appConfig.LocalListenIP, appConfig.LocalListenPort)
+	listen := fmt.Sprintf("%s:%d", config.LocalListenIP, config.LocalListenPort)
 
 	cfg := &guerrilla.AppConfig{LogFile: log.OutputStdout.String(), AllowedHosts: []string{"*"}}
 	sc := guerrilla.ServerConfig{
@@ -23,19 +23,20 @@ func StartServer(appConfig internal.SMTPConfig) (err error) {
 		IsEnabled:       true,
 		TLS: guerrilla.ServerTLSConfig{
 			StartTLSOn:     true,
-			PrivateKeyFile: "/Users/rick/Dev/art/servo/etc/smtpKey.key",
-			PublicKeyFile:  "/Users/rick/Dev/art/servo/etc/smtpCert.crt",
+			PrivateKeyFile: config.TLSPrivateKey,
+			PublicKeyFile:  config.TLSCert,
 		},
+		MaxClients: 1,
+		Timeout:    360,
 	}
 	cfg.Servers = append(cfg.Servers, sc)
 
 	bcfg := backends.BackendConfig{
-		"save_workers_size":  3,
+		"save_workers_size":  1, //3
 		"save_process":       "HeadersParser|Header|Hasher|Debugger|MailRelay",
 		"log_received_mails": true,
 	}
 	cfg.BackendConfig = bcfg
-
 	d := guerrilla.Daemon{Config: cfg}
 	d.AddProcessor("MailRelay", mailRelayProcessor)
 
