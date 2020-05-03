@@ -40,6 +40,7 @@ func InitCommands() *cobra.Command {
 	rootCmd.AddCommand(initDelete())
 	rootCmd.AddCommand(initVersion())
 	rootCmd.AddCommand(initService())
+	rootCmd.AddCommand(initMailRelay())
 
 	rootCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "d", false, "does not actually perform the action")
 	rootCmd.PersistentFlags().BoolVarP(&Debug, "verbose", "v", false, "debug level logs")

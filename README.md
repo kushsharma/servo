@@ -7,6 +7,7 @@ Server management tool
  * basic stats are published on :9090/stats
  * service status can be checked by :9090:ping
  * can cron jobs based on provided schedule
+ * can serve as smtp relay for aws ses
 
 
 ## TODO
@@ -29,6 +30,7 @@ make
  * servo delete s3 some/path bucket_name -v
  * servo delete log --dry-run --verbose
  * servo service
+ * servo mailrelay
 
 #### servo config *.servo* can be placed in
  * same folder as binary

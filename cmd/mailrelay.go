@@ -10,13 +10,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-//localfs:./version s3DO:moonwaretech/temp/ --ignore-existing
-
-func initTest() *cobra.Command {
+func initMailRelay() *cobra.Command {
 	return &cobra.Command{
-		Use: "test",
+		Use: "mailrelay",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			log.Info("starting test tool...")
+			log.Info("starting smtp mail relay...")
 
 			appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
 			if !ok {

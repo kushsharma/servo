@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -31,6 +33,9 @@ const (
 
 	// The character encoding for the email.
 	CharSet = "UTF-8"
+
+	FromRegex = "From: [a-zA-Z0-9@+>< _.]+\\n"
+	MailRegex = "([a-zA-Z0-9+._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z0-9_-]+)"
 )
 
 type SessionFactory func(*ses.SES) *BackendSession
@@ -61,50 +66,69 @@ func (s *BackendSession) Data(r io.Reader) (err error) {
 }
 
 func (s *BackendSession) Reset() {
+	if len(s.data) > 0 {
+		s.SendMail()
+	}
 	s.from = ""
 	s.to = ""
 	s.data = []byte{}
 }
 
 func (s *BackendSession) Logout() error {
-	s.SendMail()
-	return nil
+	return s.SendMail()
 }
 
 func (s *BackendSession) SendMail() error {
-
-	if valid, err := checkUserIdentity(s.awsSES, s.from); err != nil || !valid {
-		return fmt.Errorf("unable to verify valid email sender: %v", err)
+	if len(s.data) == 0 {
+		return nil
 	}
+	mailData := string(s.data)
+
+	fromPatt, _ := regexp.Compile(FromRegex)
+	fromMatch := fromPatt.FindString(mailData)
+
+	mailPatt, _ := regexp.Compile(MailRegex)
+	emailFrom := mailPatt.FindString(fromMatch)
+
+	log.Debugf("sending mail from %s : %s", emailFrom, mailData)
+	if valid, err := checkUserIdentity(s.awsSES, emailFrom); err != nil || !valid {
+		berr := fmt.Errorf("unable to verify valid email sender: %v", err)
+		log.Error(berr)
+		return berr
+	}
+
 	input := &ses.SendRawEmailInput{
 		RawMessage: &ses.RawMessage{
 			Data: s.data,
 		},
 	}
 
-	output, err := s.awsSES.SendRawEmail(input)
-	log.Debug(output)
+	_, err := s.awsSES.SendRawEmail(input)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	s.data = []byte{}
 	return err
 }
 
 //checkUserIdentity check if we are allowed to send email using this from field
 func checkUserIdentity(svc *ses.SES, from string) (bool, error) {
+	fromSplit := strings.Split(from, "@")
+	if len(fromSplit) == 1 {
+		return false, nil
+	}
+	domain := fromSplit[1]
 
-	//get list of emails which are allowed to be sender on emails from ses
-	result, err := svc.ListIdentities(&ses.ListIdentitiesInput{IdentityType: aws.String("EmailAddress")})
+	var e = []*string{aws.String(domain)}
+	verified, err := svc.GetIdentityVerificationAttributes(&ses.GetIdentityVerificationAttributesInput{Identities: e})
 	if err != nil {
 		return false, err
 	}
-	for _, email := range result.Identities {
-		var e = []*string{email}
-		verified, err := svc.GetIdentityVerificationAttributes(&ses.GetIdentityVerificationAttributesInput{Identities: e})
-		if err != nil {
-			return false, err
-		}
-		for _, va := range verified.VerificationAttributes {
-			if *va.VerificationStatus == "Success" && *email == from {
-				return true, nil
-			}
+	for _, va := range verified.VerificationAttributes {
+		if *va.VerificationStatus == "Success" {
+			return true, nil
 		}
 	}
 
@@ -166,6 +190,6 @@ func createFormatedMail(svc *ses.SES, sender, recipient string) {
 		return
 	}
 
-	fmt.Println("Email Sent!")
-	fmt.Print(sendMailResult)
+	log.Info("Email Sent!")
+	log.Info(sendMailResult)
 }

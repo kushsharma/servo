@@ -38,4 +38,7 @@ remotes: # s3/local/ssh
     password: password
     tls_private_key: ""
     tls_cert: ""
+  ses:
+    key: AAAA
+    secret: AAAAAAAAAAAAAAAAAA
 
