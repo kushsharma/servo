@@ -23,24 +23,10 @@ func initTest() *cobra.Command {
 				return errors.New("unable to find application config")
 			}
 
-			// Create a new session and specify an AWS Region.
-			// sess, err := session.NewSession(&aws.Config{
-			// 	Region:      aws.String(AwsRegion),
-			// 	Credentials: credentials.NewStaticCredentials(appConfig.Remotes.SES.Key, appConfig.Remotes.SES.Secret, ""),
-			// })
-
-			err = mailrelay.StartServerGOSMTP(appConfig.Remotes.SMTP)
-			//err = mailrelay.StartServer(appConfig.Remotes.SMTP)
+			err = mailrelay.Start(appConfig.Remotes)
 			if err != nil {
 				return err
 			}
-			// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
-			// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
-			//signal.Notify(termChan, os.Interrupt)
-			//signal.Notify(termChan, os.Kill)
-
-			// // Block until we receive our signal.
-			//<-termChan
 
 			return err
 		},

@@ -74,8 +74,8 @@ type DBAuth struct {
 type SMTPConfig struct {
 	LocalListenIP   string `yaml:"listen_ip"`
 	LocalListenPort int    `yaml:"listen_port"`
-	SMTPUsername    string `yaml:"user"`
-	SMTPPassword    string `yaml:"password"`
+	Username        string `yaml:"user"`
+	Password        string `yaml:"password"`
 	TLSPrivateKey   string `yaml:"tls_private_key"`
 	TLSCert         string `yaml:"tls_cert"`
 }

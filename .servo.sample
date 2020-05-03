@@ -34,4 +34,8 @@ remotes: # s3/local/ssh
   smtp:
     listen_ip: 127.0.0.1
     listen_port: 2525
+    user: username
+    password: password
+    tls_private_key: ""
+    tls_cert: ""
 

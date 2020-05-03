@@ -1,37 +1,22 @@
 package mailrelay
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"os"
+	"io"
+	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/flashmob/go-guerrilla/mail"
-	"github.com/kushsharma/servo/internal"
-	"github.com/spf13/viper"
+	"github.com/emersion/go-smtp"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	// Replace sender@example.com with your "From" address.
-	// This address must be verified with Amazon SES.
-	Sender = "noreply@softnuke.com"
-
-	// Replace recipient@example.com with a "To" address. If your account
-	// is still in the sandbox, this address must be verified.
-	Recipient = "kush.darknight@gmail.com"
-
 	// Specify a configuration set. If you do not want to use a configuration
 	// set, comment out the following constant and the
 	// ConfigurationSetName: aws.String(ConfigurationSet) argument below
 	ConfigurationSet = "ConfigSet"
-
-	// Replace us-west-2 with the AWS Region you're using for Amazon SES.
-	AwsRegion = "ap-south-1"
 
 	// The subject line for the email.
 	Subject = "Amazon SES Test (AWS SDK for Go) 2"
@@ -48,89 +33,92 @@ const (
 	CharSet = "UTF-8"
 )
 
-func sendMail(e *mail.Envelope) error {
-	appConfig, ok := viper.Get("app").(internal.ApplicationConfig)
-	if !ok {
-		return errors.New("unable to find application config")
-	}
+type SessionFactory func(*ses.SES) *BackendSession
 
-	fmt.Print(e.MailFrom)
+// BackendSession is returned after successful login.
+type BackendSession struct {
+	awsSES *ses.SES
+	from   string
+	to     string
+	data   []byte
+}
 
-	// Create a new session and specify an AWS Region.
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(AwsRegion),
-		Credentials: credentials.NewStaticCredentials(appConfig.Remotes.SES.Key, appConfig.Remotes.SES.Secret, ""),
-	})
-	if err != nil {
-		return err
-	}
-
-	// Create an SES client in the session.
-	svc := ses.New(sess)
-	fmt.Print(svc.APIVersion)
-
-	var msg bytes.Buffer
-	msg.Write(e.Data.Bytes())
-	msg.WriteString("\r\n")
-	fmt.Print(msg.String())
-
-	// mailOb := email.NewEmail()
-	// mailOb.From = Sender
-	// mailOb.To = []string{Recipient}
-	// mailOb.Subject = e.Subject
-	// mailOb.Headers = e.Header
-	// mailOb.HTML = e.Data.Bytes()
-	// mailBytes, err := mailOb.Bytes()
-	// if err != nil {
-	// 	return err
-	// }
-	//fmt.Print(string(mailBytes))
-
-	input := &ses.SendRawEmailInput{
-		RawMessage: &ses.RawMessage{
-			Data: msg.Bytes(),
-		},
-	}
-
-	//output, err := svc.SendRawEmail(input)
-	fmt.Print(input)
-	if err != nil {
-		return err
-	}
+func (s *BackendSession) Mail(from string, opts smtp.MailOptions) error {
+	s.from = from
 	return nil
 }
 
-func checkUserIdentity(svc *ses.SES) {
+func (s *BackendSession) Rcpt(to string) error {
+	s.to = to
+	return nil
+}
+
+func (s *BackendSession) Data(r io.Reader) (err error) {
+	if b, err := ioutil.ReadAll(r); err == nil {
+		s.data = b
+	}
+	return err
+}
+
+func (s *BackendSession) Reset() {
+	s.from = ""
+	s.to = ""
+	s.data = []byte{}
+}
+
+func (s *BackendSession) Logout() error {
+	s.SendMail()
+	return nil
+}
+
+func (s *BackendSession) SendMail() error {
+
+	if valid, err := checkUserIdentity(s.awsSES, s.from); err != nil || !valid {
+		return fmt.Errorf("unable to verify valid email sender: %v", err)
+	}
+	input := &ses.SendRawEmailInput{
+		RawMessage: &ses.RawMessage{
+			Data: s.data,
+		},
+	}
+
+	output, err := s.awsSES.SendRawEmail(input)
+	log.Debug(output)
+	return err
+}
+
+//checkUserIdentity check if we are allowed to send email using this from field
+func checkUserIdentity(svc *ses.SES, from string) (bool, error) {
 
 	//get list of emails which are allowed to be sender on emails from ses
 	result, err := svc.ListIdentities(&ses.ListIdentitiesInput{IdentityType: aws.String("EmailAddress")})
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return false, err
 	}
 	for _, email := range result.Identities {
 		var e = []*string{email}
 		verified, err := svc.GetIdentityVerificationAttributes(&ses.GetIdentityVerificationAttributesInput{Identities: e})
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return false, err
 		}
 		for _, va := range verified.VerificationAttributes {
-			if *va.VerificationStatus == "Success" {
-				fmt.Println(*email)
+			if *va.VerificationStatus == "Success" && *email == from {
+				return true, nil
 			}
 		}
 	}
+
+	return false, nil
 }
 
-func createFormatedMail(svc *ses.SES) {
+func createFormatedMail(svc *ses.SES, sender, recipient string) {
 
 	// Assemble the email.
 	input := &ses.SendEmailInput{
 		Destination: &ses.Destination{
 			CcAddresses: []*string{},
 			ToAddresses: []*string{
-				aws.String(Recipient),
+				aws.String(recipient),
 			},
 		},
 		Message: &ses.Message{
@@ -149,7 +137,7 @@ func createFormatedMail(svc *ses.SES) {
 				Data:    aws.String(Subject),
 			},
 		},
-		Source: aws.String(Sender),
+		Source: aws.String(sender),
 		// Comment or remove the following line if you are not using a configuration set
 		//ConfigurationSetName: aws.String(ConfigurationSet),
 	}

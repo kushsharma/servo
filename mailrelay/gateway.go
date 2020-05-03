@@ -2,70 +2,27 @@ package mailrelay
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
+	"os"
 	"time"
 
-	"github.com/emersion/go-smtp"
+	gosmtp "github.com/emersion/go-smtp"
 	"github.com/kushsharma/servo/internal"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
-// The Backend implements SMTP server methods.
-type Backend struct{}
+//StartSMTP starts smtp server on provided ip and port
+func StartSMTP(config internal.SMTPConfig, be gosmtp.Backend) (err error) {
 
-// Login handles a login command with username and password.
-func (bkd *Backend) Login(state *smtp.ConnectionState, username, password string) (smtp.Session, error) {
-	if username == "kush hero" {
-		return &Session{}, nil
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = viper.GetString("appname")
 	}
-	if username != "kush" || password != "hero" {
-		return nil, errors.New("Invalid username or password")
-	}
-	return &Session{}, nil
-}
 
-// AnonymousLogin requires clients to authenticate using SMTP AUTH before sending emails
-func (bkd *Backend) AnonymousLogin(state *smtp.ConnectionState) (smtp.Session, error) {
-	return nil, smtp.ErrAuthRequired
-}
-
-// A Session is returned after successful login.
-type Session struct{}
-
-func (s *Session) Mail(from string, opts smtp.MailOptions) error {
-	log.Println("Mail from:", from)
-	return nil
-}
-
-func (s *Session) Rcpt(to string) error {
-	log.Println("Rcpt to:", to)
-	return nil
-}
-
-func (s *Session) Data(r io.Reader) error {
-	if b, err := ioutil.ReadAll(r); err != nil {
-		return err
-	} else {
-		log.Println("Data:", string(b))
-	}
-	return nil
-}
-
-func (s *Session) Reset() {}
-
-func (s *Session) Logout() error {
-	return nil
-}
-
-func StartServerGOSMTP(config internal.SMTPConfig) (err error) {
-	be := &Backend{}
-
-	s := smtp.NewServer(be)
-	s.Addr = "127.0.0.1:2525"
-	s.Domain = "localhost"
+	s := gosmtp.NewServer(be)
+	s.Addr = fmt.Sprintf("%s:%d", config.LocalListenIP, config.LocalListenPort)
+	s.Domain = hostname
 	s.ReadTimeout = 30 * time.Second
 	s.WriteTimeout = 30 * time.Second
 	s.MaxMessageBytes = 1024 * 1024 * 5
@@ -80,10 +37,9 @@ func StartServerGOSMTP(config internal.SMTPConfig) (err error) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	log.Println("Starting server at", s.Addr)
+	log.Infof("starting smtp server at: %s", s.Addr)
 	if err := s.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
-
 	return err
 }

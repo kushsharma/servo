@@ -10,10 +10,10 @@ import (
 	"github.com/kushsharma/servo/internal"
 )
 
-// StartServer starts the smtp server
+// StartGuerrillaSMTP starts the smtp server
 // use `openssl req -new -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out smtpCert.crt -keyout smtpKey.key`
 // to generate private key and signed certificate for TLS
-func StartServerGuerrilla(config internal.SMTPConfig) (err error) {
+func StartGuerrillaSMTP(config internal.SMTPConfig) (err error) {
 
 	listen := fmt.Sprintf("%s:%d", config.LocalListenIP, config.LocalListenPort)
 
@@ -50,11 +50,12 @@ var mailRelayProcessor = func() backends.Decorator {
 			func(e *mail.Envelope, task backends.SelectTask) (backends.Result, error) {
 				if task == backends.TaskSaveMail {
 
-					err := sendMail(e)
-					if err != nil {
-						fmt.Printf("!!! %v\n", err)
-						return backends.NewResult(fmt.Sprintf("554 Error: %s", err)), err
-					}
+					fmt.Print(e)
+					// err := sendMail(e)
+					// if err != nil {
+					// 	fmt.Printf("!!! %v\n", err)
+					// 	return backends.NewResult(fmt.Sprintf("554 Error: %s", err)), err
+					// }
 
 					return p.Process(e, task)
 				}
