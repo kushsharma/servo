@@ -1,6 +1,7 @@
 [Unit]
 Description=Server management tool
 After=network.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -8,6 +9,8 @@ ExecStart=/pkgs/servo service
 ExecStop=/bin/kill -2 $MAINPID
 StandardOutput=syslog
 StandardError=syslog
+Restart=always
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

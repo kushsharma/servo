@@ -110,6 +110,7 @@ func (s *BackendSession) SendMail() error {
 	}
 
 	s.data = []byte{}
+	log.Infof("mail relayed successfully, where, from: %s[%s] to: %s", emailFrom, s.from, s.to)
 	return err
 }
 
